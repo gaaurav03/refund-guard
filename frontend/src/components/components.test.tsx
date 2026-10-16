@@ -86,7 +86,10 @@ describe("decision helpers", () => {
   });
 
   it("explains fallbacks as fail-closed", () => {
-    expect(explain({ ...DECISION, decided_by: "fallback", policy_step: "fallback:x" }, META)).toMatch(/failed closed/);
+    expect(explain({ ...DECISION, decided_by: "fallback", policy_step: "fallback:x" }, META)).toMatch(/nothing was paid/);
+    expect(explain({ ...DECISION, decided_by: "fallback", policy_step: "fallback:decider_error" }, META)).toMatch(
+      /Decider didn't answer/,
+    );
   });
 });
 

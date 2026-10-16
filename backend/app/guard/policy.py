@@ -13,8 +13,13 @@ from ..models import DeciderResult, Decision, RefundClaimState
 
 __all__ = ["DENY_FEEDBACK", "ESCALATE_FEEDBACK", "Thresholds", "apply_policy", "fallback_decision", "partial_cap"]
 
-ESCALATE_FEEDBACK = "Sent to human review. Tell the customer a person will check it. Do not retry."
-DENY_FEEDBACK = "Refund not permitted: the evidence does not support this claim. Do not retry."
+ESCALATE_FEEDBACK = (
+    "NOT PAID. Sent to human review. Tell the customer a person will check it. Do not promise a refund, an "
+    "amount or a timeline. Do not retry."
+)
+DENY_FEEDBACK = (
+    "NOT PAID. Refund not permitted: the evidence does not support this claim. Do not promise a refund. Do not retry."
+)
 UNGROUNDED_FEEDBACK = (
     "This refund call's order id or amount is not supported by what the customer said. "
     "Confirm them with the customer before trying again."

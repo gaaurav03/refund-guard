@@ -51,6 +51,10 @@ export function explain(d: Decision, meta: Meta | null): string {
   if (d.decided_by === "precheck" && d.rule_id) {
     return `${d.rule_id}: ${meta?.rules[d.rule_id] ?? "pre-check rule"}`;
   }
-  if (d.decided_by === "fallback") return "Something failed, so it failed closed to a human";
+  if (d.decided_by === "fallback") {
+    if (d.policy_step === "fallback:decider_error")
+      return "Decider didn't answer (offline or too slow), so nothing was paid and a human will check";
+    return "Something failed, so nothing was paid and a human will check";
+  }
   return meta?.policy_steps[d.policy_step] ?? d.policy_step;
 }

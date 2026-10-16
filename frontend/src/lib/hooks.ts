@@ -22,13 +22,23 @@ export function useMeta(): Meta | null {
 export type HealthState = "checking" | "up" | "asleep" | "budget";
 
 export function useHealth(): HealthState {
+  return useHealthDetail().state;
+}
+
+/** Health plus whether Decider itself answers (the site can be up while Decider is down). */
+export function useHealthDetail(): { state: HealthState; deciderOk: boolean | null } {
   const [state, setState] = useState<HealthState>("checking");
+  const [deciderOk, setDeciderOk] = useState<boolean | null>(null);
   useEffect(() => {
     let alive = true;
     const check = () =>
       api
         .health()
-        .then((h: Health) => alive && setState(h.budget_exhausted ? "budget" : "up"))
+        .then((h: Health) => {
+          if (!alive) return;
+          setState(h.budget_exhausted ? "budget" : "up");
+          setDeciderOk(Boolean(h.decider?.ok));
+        })
         .catch(() => alive && setState("asleep"));
     void check();
     const t = window.setInterval(check, 30_000);
@@ -37,7 +47,7 @@ export function useHealth(): HealthState {
       window.clearInterval(t);
     };
   }, []);
-  return state;
+  return { state, deciderOk };
 }
 
 export function usePoll<T>(fn: () => Promise<T>, ms: number, enabled = true): T | null {

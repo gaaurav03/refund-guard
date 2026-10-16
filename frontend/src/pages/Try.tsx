@@ -5,7 +5,7 @@ import { DecisionPanel } from "../components/DecisionPanel";
 import { DemoSleeping } from "../components/Layout";
 import { ModeSwitch, PersonaPicker } from "../components/PersonaPicker";
 import { LiveFeed, Scoreboard } from "../components/Scoreboard";
-import { useHealth, useMeta, usePoll } from "../lib/hooks";
+import { useHealthDetail, useMeta, usePoll } from "../lib/hooks";
 import { savedSelection, useConversation } from "../lib/useConversation";
 import type { Persona } from "../types/decision";
 
@@ -25,7 +25,7 @@ const GENUINE_CUSTOMER = "CUST-007";
 type Tab = "chat" | "decision" | "score";
 
 export function Try() {
-  const health = useHealth();
+  const { state: health, deciderOk } = useHealthDetail();
   const meta = useMeta();
   const [personas, setPersonas] = useState<Persona[]>([]);
   const restored = savedSelection("challenge"); // a refresh brings back the same customer, mode and chat
@@ -78,6 +78,13 @@ export function Try() {
           </p>
         )}
       </div>
+
+      {deciderOk === false && (
+        <div role="status" className="mt-6 rounded-card border border-escalate/40 bg-escalate/10 p-4 text-sm">
+          <span className="font-medium">Decider 2B is offline right now.</span> Every refund attempt will fail closed
+          and go to a human (nothing is paid). Try again in a few minutes.
+        </div>
+      )}
 
       {won && (
         <div className="mt-6 rounded-card border border-deny/40 bg-deny/10 p-4 text-sm">

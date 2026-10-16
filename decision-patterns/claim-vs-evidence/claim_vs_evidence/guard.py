@@ -40,8 +40,9 @@ Gather = Callable[[dict[str, Any], dict[str, Any]], "Evidence | Verdict"]
 OnDecision = Callable[[Verdict, Any], None]
 
 DEFAULT_FEEDBACK: dict[str, str] = {
-    "deny": "Not permitted: the evidence does not support this claim. Do not retry.",
-    "escalate": "Sent to human review. Tell the person someone will check it. Do not retry.",
+    "deny": "NOT PAID. Not permitted: the evidence does not support this claim. Do not promise a refund. Do not retry.",
+    "escalate": "NOT PAID. Sent to human review. Tell the person someone will check it. Do not promise an "
+    "outcome or an amount. Do not retry.",
     "ungrounded": "The order id or amount in this call is not supported by what the person said. "
     "Confirm them with the person before trying again.",
     "log_failed": "Not permitted right now. Tell the person someone will follow up.",
