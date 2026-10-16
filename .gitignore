@@ -19,3 +19,4 @@ dist/
 scripts/out/
 *.log
 *.tsbuildinfo
+*.egg-info/
