@@ -79,6 +79,13 @@
 
 .bar-fill { transition: width 400ms ease-out; }
 
+/* slim, theme-matched scrollbar for scrollable cards */
+.scroll-slim { scrollbar-width: thin; scrollbar-color: rgb(var(--muted) / 0.45) transparent; }
+.scroll-slim::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-slim::-webkit-scrollbar-track { background: transparent; }
+.scroll-slim::-webkit-scrollbar-thumb { background: rgb(var(--muted) / 0.35); border-radius: 999px; border: 2px solid rgb(var(--surface)); }
+.scroll-slim::-webkit-scrollbar-thumb:hover { background: rgb(var(--muted) / 0.6); }
+
 .stamp-in { animation: stamp 380ms cubic-bezier(.2,1.4,.4,1) both; }
 @keyframes stamp {
   from { opacity: 0; transform: rotate(-8deg) scale(1.6); }

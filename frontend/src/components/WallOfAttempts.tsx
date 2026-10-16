@@ -67,10 +67,10 @@ export function WallOfAttempts() {
           </button>
         ))}
       </div>
-      <div className="card overflow-x-auto">
+      <div className="card scroll-slim max-h-[560px] overflow-auto" tabIndex={0} aria-label="Benchmark cases (scrollable)">
         <table className="w-full min-w-[720px] text-left">
-          <thead className="label">
-            <tr className="border-b border-hairline">
+          <thead className="label sticky top-0 z-10 bg-surface shadow-[0_1px_0_rgb(var(--hairline))]">
+            <tr>
               <th className="px-4 py-3 font-normal">What the customer said</th>
               <th className="px-4 py-3 font-normal">Asked</th>
               <th className="px-4 py-3 font-normal">Deciding signal</th>
@@ -116,6 +116,9 @@ export function WallOfAttempts() {
           </tbody>
         </table>
       </div>
+      <p className="mt-2 text-right font-mono text-[11px] text-muted">
+        {rows.length} {rows.length === 1 ? "case" : "cases"} · scroll inside the table ↕
+      </p>
     </div>
   );
 }
