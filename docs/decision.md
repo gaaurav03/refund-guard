@@ -117,6 +117,7 @@ Field names are canonical. Pydantic models, TS types, DynamoDB attributes and th
 | `past_refund_total` | float | `rg_refunds` | last 365 days |
 | `claimed_reason` | enum | Bedrock-extracted | `damaged \| not_delivered \| wrong_item \| missing_item \| not_as_described \| changed_mind \| other` |
 | `claimed_skus` | list[str] | Bedrock-extracted | items the claim is about (unknown SKUs kept so `PC-05` can deny) |
+| `claimed_units` | dict[str, int] | Bedrock-extracted (added Oct 16) | SKU → units with the problem, only when the customer names fewer than ordered ("one of the two packs" → 1); kept only if 1 ≤ units < qty. Empty = whole line |
 | `customer_quotes` | list[str] | Bedrock-extracted, **kept only if verbatim** in the customer's messages | max 5 quotes, 300 chars each |
 | `requested_amount` | float | tool argument `amount` | |
 | `tool_reason` | str | tool argument `reason`, verbatim | used by `args_grounded` |
@@ -203,7 +204,7 @@ Rules handle what arithmetic and lookups can check. Decider handles the judgemen
 | 5c | `concrete_problem` ≥ 0.70 but no items identified | `escalate` | `policy:no_items_identified` |
 | 6 | anything else | `escalate` | `policy:no_concrete_problem` |
 
-**`partial_cap()`** is deterministic: `min(requested_amount, Σ unit_price × qty over claimed_skus)`. Decider never chooses an amount. Known limitation: the cap works per product line, not per unit (two tea packs, one torn → pays for both).
+**`partial_cap()`** is deterministic: `min(requested_amount, Σ unit_price × units over claimed_skus)`, where units = `claimed_units[sku]` if given, else the ordered qty. Decider never chooses an amount. Since Oct 16 the cap works per unit when the customer names a number ("one of the two packs" → 300, not 600). Remaining limitation: a set sold as one item ("Cup set of 4", 2 cups chipped) still pays the whole set.
 
 **Invariants (unit-tested):**
 - Money moves only when Decider is confident there is a concrete problem **and** nothing contradicts it, nothing suggests pressure, and the customer isn't unsure.
@@ -219,7 +220,7 @@ Thresholds were fixed **before** the first V2 run on the dev split, and they are
 | Concern | Bedrock (LLM) | Decider 2B | Deterministic code |
 |---|---|---|---|
 | Talk to the customer | ✅ | | |
-| Extract `claimed_reason`, `claimed_skus`, `customer_quotes` from chat | ✅ (Converse, JSON) | | validates; drops non-verbatim quotes |
+| Extract `claimed_reason`, `claimed_skus`, `claimed_units`, `customer_quotes` from chat | ✅ (Converse, JSON) | | validates; drops non-verbatim quotes |
 | Look up order/delivery/history; KEY FACTS | | | ✅ |
 | Pre-checks `PC-01..09` | | | ✅ |
 | Are the tool arguments grounded in what the customer said? | ❌ (never) | ✅ `args_grounded` | supplies verbatim messages |
@@ -289,6 +290,21 @@ identical outcomes and amounts.
 **Transform paid 300**; false "coupon failed" (records: applied) → paid with raw records (`contradicted` 0.55) and with a
 record-only fact (0.57), **denied with a claim-vs-record key fact (0.89)**. Lesson recorded in the pattern README: write
 KEY FACTS that put the claim and the record side by side.
+
+---
+
+## 8b. Experiments after the benchmark (Oct 16)
+
+| Version | Change | Result | Shipped? |
+|---|---|---|---|
+| V3 | Strictly literal `args_grounded` + code facts (amounts / order ids the customer typed) | Overpayment ₹2,250 → ₹750 on 60 cases, but **4 honest customers refused** (asked for more than the damaged item; V2 paid a fair capped partial). Cause: a clause tying "grounded" to the damaged items' price | **No** |
+| V3c | V3 + code rule (named amount / order id ≠ tool call → deny) | Same as V3 | No |
+| V2 + code rule | Today's questions + the code rule only | 55/60 vs 54/60, ₹500 less overpaid, no honest customer refused | candidate |
+| Unit-level cap | `claimed_units` from extraction | All 60 saved V2 decisions unchanged; "one of two packs" now pays 300 | **Yes** (production) |
+| V4 | V2 questions, literal `args_grounded` **without** V3's clause, code facts + rule, new `wants_refund` question (can only block a payout) | Tested on 14 FRESH cases committed before the run (`split: fresh`) | pending |
+
+Caveat: V3/V4 were designed after seeing the test split's failures, so their test-split numbers are not clean
+held-out results. The EXTRA (10) and FRESH (14) splits were written before the respective runs.
 
 ---
 
