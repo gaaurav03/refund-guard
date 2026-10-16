@@ -140,8 +140,8 @@ sequenceDiagram
 | Var | Example | Purpose |
 |---|---|---|
 | `AWS_REGION` | `ap-southeast-2` | SCP region lock |
-| `BEDROCK_MODEL_ID` | winner of the Oct 17 bake-off (candidates: `openai.gpt-oss-120b-1:0`, `deepseek.v3.2`, `global.amazon.nova-2-lite-v1:0`) | Primary chat model |
-| `BEDROCK_FALLBACK_MODEL_ID` | runner-up of the bake-off (different provider from the primary) | Used if primary is unavailable/throttled |
+| `BEDROCK_MODEL_ID` | `global.amazon.nova-2-lite-v1:0` | Primary chat + extraction model (bake-off winner: 6/6 extraction, 6/6 gullible attempts, 4.3 s median turn) |
+| `BEDROCK_FALLBACK_MODEL_ID` | `openai.gpt-oss-120b-1:0` | Different provider; `FallbackAgent` switches on throttling/model errors and keeps the conversation |
 | `STRANDS_DECIDER_URL` | `http://127.0.0.1:8099` | Same var as the upstream example |
 | `DECIDER_MODEL` | `StrandsAgents/strands-decider-2B-qwen3.5-v1-2610` | TODO-VERIFY (TV-01) |
 | `DECIDER_TIMEOUT_MS` | `3000` | then fail closed |

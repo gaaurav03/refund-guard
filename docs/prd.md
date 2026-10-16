@@ -64,7 +64,7 @@ Refund Guard is **not** a competitor to Amazon/Flipkart-scale fraud systems.
 
 | ID | Requirement |
 |---|---|
-| FR-01 | Chat with a Strands agent backed by Bedrock (Converse). Primary and fallback models are chosen by the Oct 17 bake-off from the models this account can invoke (memory.md). |
+| FR-01 | Chat with a Strands agent backed by Bedrock (Converse). Primary: Amazon Nova 2 Lite (`global.amazon.nova-2-lite-v1:0`); fallback: `openai.gpt-oss-120b-1:0` (bake-off, `bench/results/bakeoff.json`). |
 | FR-02 | Agent tools: `lookup_order(order_id)`, `get_delivery(order_id)`, `issue_refund(order_id, amount, reason)` |
 | FR-03 | Bedrock extracts `claimed_reason`, `claimed_skus`, `customer_quotes` into `RefundClaimState` |
 | FR-04 | Pre-checks `PC-01..PC-09` run before Decider |

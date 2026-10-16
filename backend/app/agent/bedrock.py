@@ -10,7 +10,8 @@ from botocore.config import Config
 from ..guard.extraction import ConverseFn
 
 
-def make_converse(model_id: str, region: str, *, max_tokens: int = 400, timeout_s: int = 30) -> ConverseFn:
+def make_converse(model_id: str, region: str, *, max_tokens: int = 1000, timeout_s: int = 30) -> ConverseFn:
+    # 1000, not 400: reasoning models (gpt-oss) can spend the whole budget thinking and return no JSON
     client: Any = boto3.client(
         "bedrock-runtime",
         region_name=region,

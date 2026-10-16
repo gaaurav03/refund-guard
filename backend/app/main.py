@@ -12,7 +12,7 @@ from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 
 from .agent.bedrock import make_converse
-from .agent.build import build_agent
+from .agent.build import FallbackAgent, build_agent
 from .agent.session import Session
 from .api import create_app
 from .config import get_settings
@@ -32,9 +32,12 @@ converse = make_converse(settings.bedrock_model_id, settings.aws_region)
 ledger = Ledger()
 
 
-def agent_factory(session: Session):  # type: ignore[no-untyped-def]
-    return build_agent(settings=settings, repo=repo, decider=decider, converse=converse, ledger=ledger,
-                       gullible=session.gullible)
+def agent_factory(session: Session) -> FallbackAgent:
+    def make(model_id: str, messages: list[object] | None):  # type: ignore[no-untyped-def]
+        return build_agent(settings=settings, repo=repo, decider=decider, converse=converse, ledger=ledger,
+                           model_id=model_id, gullible=session.gullible, messages=messages)
+
+    return FallbackAgent(make, settings.bedrock_model_id, settings.bedrock_fallback_model_id)
 
 
 app = create_app(settings=settings, repo=repo, agent_factory=agent_factory, decider_health=decider.health)

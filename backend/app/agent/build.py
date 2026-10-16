@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+from collections.abc import Callable
+from typing import Any
+
+from botocore.exceptions import ClientError
 from strands import Agent
 from strands.models import BedrockModel
+from strands.types.exceptions import EventLoopException, ModelThrottledException
 
 from ..config import Settings
 from ..guard.decider_client import DeciderClient
@@ -13,6 +19,8 @@ from ..guard.ledger import Ledger
 from ..guard.policy import Thresholds
 from ..store.repo import Repo
 from .tools import make_tools
+
+log = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """You are the friendly support assistant for Chai & Clay, a small online store selling tea and ceramics in India (prices in INR).
 
@@ -59,6 +67,7 @@ def build_agent(
     ledger: Ledger,
     model_id: str | None = None,
     gullible: bool = False,
+    messages: list[Any] | None = None,
 ) -> Agent:
     guard = RefundGuard(
         repo=repo,
@@ -80,4 +89,36 @@ def build_agent(
         tools=make_tools(repo, ledger),
         interventions=[guard],
         callback_handler=None,
+        messages=messages,
     )
+
+
+MODEL_ERRORS = (ModelThrottledException, ClientError, EventLoopException)
+
+
+class FallbackAgent:
+    """Runs turns on the primary model; on a model error, switches to the fallback model for good,
+    keeping the conversation so far (docs/architecture.md section 8)."""
+
+    def __init__(self, make: Callable[[str, list[Any] | None], Agent], primary: str, fallback: str | None) -> None:
+        self._make = make
+        self._fallback = fallback if fallback and fallback != primary else None
+        self.model_id = primary
+        self._agent = make(primary, None)
+
+    @property
+    def messages(self) -> list[Any]:
+        return list(self._agent.messages)
+
+    def __call__(self, prompt: str, **kwargs: Any) -> Any:
+        start = len(self._agent.messages)
+        try:
+            return self._agent(prompt, **kwargs)
+        except MODEL_ERRORS as e:
+            if self._fallback is None:
+                raise
+            log.warning("model %s failed (%s); switching to %s", self.model_id, type(e).__name__, self._fallback)
+            history = list(self._agent.messages)[:start]  # drop the half-finished turn
+            self.model_id, self._fallback = self._fallback, None
+            self._agent = self._make(self.model_id, history)
+            return self._agent(prompt, **kwargs)
