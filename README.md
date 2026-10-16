@@ -27,7 +27,34 @@ See [docs/decision.md §2](docs/decision.md#2-typed-questions-and-options) and [
 
 ## Measured results
 
-_Benchmark in progress: Decider 2B vs. a panel of Bedrock LLM judges. See [docs/tests.md](docs/tests.md)._
+Held-out test split: **34 cases**, labels committed before any run. Every arm gets the same evidence. Full table, prompts and raw rows are in [`bench/results/RESULTS.md`](bench/results/RESULTS.md).
+
+**Arm 1: the model answers the six evidence questions; the same code decides outcome and amount**
+
+| Model | Accuracy | Scams paid (of 20) | Genuine denied (of 8) | Escalated | Same answer every run | USD per 1k decisions |
+|---|---|---|---|---|---|---|
+| **Decider 2B** | 94% | **0** | 0 | 18% | yes (0 flips) | on GPU: measured at deploy |
+| Nova 2 Lite | 97% | 0 | 1 | 18% | 1 flip | 0.45 |
+| DeepSeek V3.2 | 91% | 0 | 1 | 18% | yes | 0.65 |
+| Kimi K3 (1 run) | 97% | 0 | 1 | 18% | n/a | 15.46 |
+| gpt-oss-120b | 91% | 0 | 1 | 12% | 3 flips | 0.39 |
+| Nova Pro | 94% | 0 | 0 | 15% | yes | 0.92 |
+
+**Arm 2: the model decides approve / partial / deny / escalate by itself**
+
+| Model | Accuracy | Scams paid (of 20) |
+|---|---|---|
+| Nova 2 Lite (the agent's own chat model) | 76% | **2, ₹3,650 paid out** |
+| gpt-oss-120b | 88% | 1, ₹2,400 |
+| Nova Pro | 88% | 1, ₹2,400 |
+| DeepSeek V3.2 | 91% | 0 |
+| Kimi K3 (1 run) | 97% | 0 |
+
+**What this shows**
+- **The pattern is what keeps money safe.** With six narrow questions plus code deciding, *every* model paid 0 of 20 scams. Asking an LLM "should I refund?" directly paid scams for 3 of 5 models, including the agent's own model.
+- **Decider 2B matches big LLMs on accuracy (94% vs 91–97%) but doesn't beat them.** Its case rests on bounded outputs, determinism, and speed and cost on a GPU, which are measured at deploy.
+- **Honest misses:** `args_grounded` scored as an "is this a scam?" signal, not a literal argument check (68% vs its label; gpt-oss 92%, Kimi 94%). Most models misread it on attacks, so the wording is our fix to make. Decider also missed both "chatbot inflated the amount" cases, but the code cap paid only the item's value.
+- Decider latency today: **14.6 s on a laptop CPU** (slower than every LLM). GPU numbers are measured at deploy.
 
 ## Reusable pattern
 

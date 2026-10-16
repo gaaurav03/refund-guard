@@ -154,7 +154,10 @@ def main() -> None:
     out = sys.stdout
     out.write("# Benchmark results: Decider 2B vs Bedrock LLM judges\n\n")
     out.write("Held-out **test split, 34 cases** (labels committed before any run). Same rendered evidence for every arm. "
-              "Judges: temperature 0, 3 runs each, majority outcome per case. Decider: deterministic, 1 run. "
+              "Judges: temperature 0, 3 runs each, majority outcome per case; **exception: B3 Kimi K3 ran once and without a "
+              "temperature setting (the model rejects it)**. Decider: deterministic, 1 run. "
+              "Judge latencies were measured with all judges running in parallel (some Bedrock throttling), so they are "
+              "pessimistic; a sequential latency run is planned. "
               "Decider latency is **laptop CPU** (GPU on deploy). Cost: Bedrock list price, Sydney (bench/prices.json).\n\n")
     out.write("| Arm | " + " | ".join(cols) + " |\n|" + "---|" * (len(cols) + 1) + "\n")
     for label, m in table.items():

@@ -45,6 +45,16 @@ JUDGES = {
 }
 
 
+NO_TEMPERATURE = {"B3"}  # Kimi K3 rejects the temperature field (reasoning model); reported as a deviation
+
+
+def inference_config(judge: str) -> dict[str, Any]:
+    cfg: dict[str, Any] = {"maxTokens": MAX_TOKENS}
+    if judge not in NO_TEMPERATURE:
+        cfg["temperature"] = 0.0
+    return cfg
+
+
 def load_prompt(name: str) -> tuple[str, str]:
     text = (ROOT / "bench" / "prompts" / f"{name}.md").read_text(encoding="utf-8")
     system = text.split("# SYSTEM", 1)[1].split("# USER", 1)[0].strip()
@@ -130,7 +140,7 @@ def run_one(judge: str, arm: str, cases: list[dict[str, Any]], repeats: int, don
                     modelId=JUDGES[judge],
                     system=[{"text": system}],
                     messages=[{"role": "user", "content": [{"text": user}]}],
-                    inferenceConfig={"maxTokens": MAX_TOKENS, "temperature": 0.0},
+                    inferenceConfig=inference_config(judge),
                 )
                 text = "".join(b.get("text", "") for b in r["output"]["message"]["content"])
                 tin, tout = r["usage"]["inputTokens"], r["usage"]["outputTokens"]

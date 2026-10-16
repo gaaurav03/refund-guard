@@ -57,8 +57,9 @@
 - [x] Public-demo protections: rate limit, message/session caps, spend counter
 
 ## Oct 21 (Tue) — Benchmark + reusable pattern
-- [ ] `bench/run_bench.py` both arms; dev run → tune thresholds → freeze → test run
-- [ ] `bench/results/RESULTS.md`, failures table (honest)
+- [x] Judge panel run (`bench/run_judges.py`): B1–B5 × {six, direct} on all 50 cases, 3× (Kimi 1×). **Done Oct 16**, $1.69 Bedrock
+- [x] `bench/results/RESULTS.md` (`bench/report_judges.py`) **Done Oct 16**
+- [ ] Failures table for the article; extra "chatbot inflated the amount" cases + literal `args_grounded` wording as V3 on NEW cases
 - [x] `decision-patterns/claim-vs-evidence/`: `ClaimEvidenceGuard`, questions, policy, `examples/store_credit.py`, README, 23 tests (decision.md §8). **Done Oct 16.**
 - [ ] Update decision.md if thresholds changed
 

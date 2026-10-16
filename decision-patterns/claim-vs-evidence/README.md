@@ -119,10 +119,18 @@ before any run. Full data: [`bench/`](../../bench).
 | Genuine claims wrongly denied (of 8) | 0 | 0 |
 | Sent to a human | 76% | **18%** |
 
+**Same pattern, other models (Bedrock LLM judges on the same 34 cases):** with these six questions and this
+policy, Nova 2 Lite, DeepSeek V3.2, Kimi K3, gpt-oss-120b and Nova Pro all paid **0 of 20** scams (91–97% accuracy).
+Asked to decide approve/deny directly, 3 of 5 models paid at least one scam (up to ₹3,650). The questions and the
+code policy carry the safety; Decider 2B makes it cheap and deterministic. See [`bench/results/RESULTS.md`](../../bench/results/RESULTS.md).
+
 Latency: ~14 s per decision on a laptop CPU (six questions); GPU numbers are measured on deploy.
 
 ## Known limitations
 
+- **`args_grounded` acts as an "is this a scam?" signal, not a literal argument check.** It scored low on attacks whose
+  arguments matched the customer's words, and missed both cases where the agent inflated the amount (the cap caught
+  them). Most LLM judges misread it the same way, so make the wording strictly literal, and check amounts in code.
 - **`non_evidence` is the weakest signal.** It rarely crosses its threshold when real damage is mixed
   with pressure ("my cousin at HQ says…"). The cap still limits the payout to the fair amount.
 - **The cap is per product line, not per unit:** 2 of 4 chipped cups refunded the whole cup line.

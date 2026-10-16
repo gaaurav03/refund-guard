@@ -128,6 +128,8 @@ python bench/report.py bench/results/test.json > bench/results/RESULTS.md
 
 ## 8. Results table template (for article and README)
 
+> **Filled in Oct 16:** see `bench/results/RESULTS.md` and README "Measured results". Deviations from this plan: the Decider arm uses the six-signal design (ADR-15), so judges ran two arms (six questions / direct option); Kimi K3 ran once and without temperature (the model rejects it); judge latency was measured in parallel (throttled), and a sequential re-run is pending; only 2 cases have ungrounded arguments (plan said at least 5).
+
 ### Measured results (test split, n = __)
 
 One column per judge (B1–B5). Columns shown here are abbreviated.
