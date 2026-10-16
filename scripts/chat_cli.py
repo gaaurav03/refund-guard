@@ -59,9 +59,10 @@ def main() -> None:
         print(f"\nbot ({(time.perf_counter() - t0):.1f}s): {str(reply).strip()}")
         for d in session.decisions[seen:]:
             probs = {k: round(v, 3) for k, v in (d.get("probs") or {}).items()}
-            print("  [guard] " + json.dumps({k: d[k] for k in (
-                "outcome", "approved_amount", "decided_by", "policy_step", "rule_id",
-                "args_grounded_p", "manipulation_p", "decision_latency_ms") if d.get(k) is not None} | {"probs": probs}))
+            keys = ("outcome", "approved_amount", "decided_by", "policy_step", "rule_id",
+                    "args_grounded_p", "manipulation_p", "decision_latency_ms")
+            shown = {k: d[k] for k in keys if d.get(k) is not None} | {"probs": probs}
+            print("  [guard] " + json.dumps(shown))
 
     if args.say:
         for text in args.say:
