@@ -43,7 +43,7 @@ export function Chat() {
       <div className="mt-6">
         <PersonaPicker personas={personas} selected={customer} onSelect={setCustomer} only={DEMO} />
       </div>
-      <div className="mt-6 grid gap-5 md:grid-cols-[1.3fr_1fr]">
+      <div className="mt-6 grid gap-5 md:grid-cols-[1.3fr_1fr] md:items-start">
         <ChatPanel
           messages={convo.messages}
           busy={convo.busy}
@@ -53,7 +53,10 @@ export function Chat() {
           onSend={(t) => customer && convo.send(customer, false, t)}
           onSelectDecision={convo.setLatest}
         />
-        <aside className="card p-5" aria-label="Why this decision">
+        <aside
+          className="card scroll-slim p-5 md:sticky md:top-20 md:max-h-[calc(100dvh-6rem)] md:overflow-y-auto"
+          aria-label="Why this decision"
+        >
           <p className="label mb-4">why? · refund guard</p>
           {convo.latest ? (
             <DecisionPanel d={convo.latest} meta={meta} />

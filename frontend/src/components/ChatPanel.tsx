@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Markdown } from "./Markdown";
 import { OutcomeChip } from "./OutcomeChip";
 import type { Decision } from "../types/decision";
 
@@ -26,10 +27,11 @@ export function ChatPanel({
   suggestions?: string[];
 }) {
   const [text, setText] = useState("");
-  const end = useRef<HTMLDivElement>(null);
-  // Braces matter: newer Chromium returns a Promise from scrollIntoView, and React would call it as a cleanup.
+  const box = useRef<HTMLDivElement>(null);
+  // Scroll only the message list, never the page (scrollIntoView would also move the window).
   useEffect(() => {
-    end.current?.scrollIntoView?.({ behavior: "smooth", block: "end" });
+    const el = box.current;
+    if (el) el.scrollTo?.({ top: el.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
   const submit = (e?: FormEvent) => {
@@ -41,8 +43,8 @@ export function ChatPanel({
   };
 
   return (
-    <div className="card flex h-full min-h-[420px] flex-col">
-      <div className="flex-1 space-y-4 overflow-y-auto p-4" aria-live="polite">
+    <div className="card flex h-[min(640px,calc(100dvh-13rem))] min-h-[420px] flex-col">
+      <div ref={box} className="scroll-slim min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4" aria-live="polite">
         {messages.length === 0 && suggestions.length > 0 && (
           <div className="space-y-2">
             <p className="label">try one of these</p>
@@ -64,11 +66,11 @@ export function ChatPanel({
           ) : (
             <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed ${
+                className={`max-w-[85%] break-words rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed ${
                   m.role === "user" ? "bg-ink text-bg" : "border border-hairline bg-bg"
                 }`}
               >
-                {m.text}
+                {m.role === "bot" ? <Markdown text={m.text} /> : <span className="whitespace-pre-wrap">{m.text}</span>}
                 {m.decisions?.map((d) => (
                   <button
                     key={d.decision_id}
@@ -92,7 +94,6 @@ export function ChatPanel({
             </div>
           </div>
         )}
-        <div ref={end} />
       </div>
       <form onSubmit={submit} className="flex gap-2 border-t border-hairline p-3">
         <label htmlFor="chat-input" className="sr-only">Message</label>

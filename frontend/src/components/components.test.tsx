@@ -112,10 +112,10 @@ describe("WallOfAttempts", () => {
 });
 
 describe("ChatPanel", () => {
-  it("survives a browser whose scrollIntoView returns a Promise (Chromium), re-rendering and unmounting", async () => {
+  it("re-renders and unmounts cleanly when scroll APIs return Promises (Chromium)", async () => {
     const { ChatPanel } = await import("./ChatPanel");
-    const orig = Element.prototype.scrollIntoView;
-    Element.prototype.scrollIntoView = (() => Promise.resolve()) as unknown as typeof orig;
+    const orig = Element.prototype.scrollTo;
+    Element.prototype.scrollTo = (() => Promise.resolve()) as unknown as typeof orig;
     try {
       const props = { busy: false, placeholder: "type", onSend: () => undefined };
       const { rerender, unmount } = render(<ChatPanel {...props} messages={[]} />);
@@ -123,7 +123,21 @@ describe("ChatPanel", () => {
       expect(screen.getByText("hi")).toBeTruthy();
       unmount();
     } finally {
-      Element.prototype.scrollIntoView = orig;
+      Element.prototype.scrollTo = orig;
     }
+  });
+});
+
+describe("Markdown", () => {
+  it("renders bold, lists and code without raw asterisks, and never injects HTML", async () => {
+    const { Markdown } = await import("./Markdown");
+    const { container } = render(
+      <Markdown text={"Found **ORD-2077**, delivered.\n\n- item `MUG`\n- second\n\n<img src=x onerror=alert(1)>"} />,
+    );
+    expect(container.querySelector("strong")?.textContent).toBe("ORD-2077");
+    expect(container.querySelectorAll("li")).toHaveLength(2);
+    expect(container.querySelector("code")?.textContent).toBe("MUG");
+    expect(container.textContent).not.toContain("**");
+    expect(container.querySelector("img")).toBeNull();
   });
 });

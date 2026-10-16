@@ -94,7 +94,7 @@ export function Try() {
         ))}
       </div>
 
-      <div className="mt-4 grid gap-5 lg:mt-8 lg:grid-cols-[1.15fr_1fr_0.75fr]">
+      <div className="mt-4 grid gap-5 lg:mt-8 lg:grid-cols-[1.15fr_1fr_0.75fr] lg:items-start">
         <section className={`${tab === "chat" ? "" : "hidden"} lg:block`} aria-label="Chat">
           <ChatPanel
             messages={convo.messages}
@@ -111,7 +111,10 @@ export function Try() {
           {convo.left !== null && <p className="mt-2 font-mono text-[11px] text-muted">{convo.left} messages left</p>}
         </section>
 
-        <section className={`card p-5 ${tab === "decision" ? "" : "hidden"} lg:block`} aria-label="Live decision">
+        <section
+          className={`card scroll-slim p-5 ${tab === "decision" ? "" : "hidden"} lg:sticky lg:top-20 lg:block lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto`}
+          aria-label="Live decision"
+        >
           <p className="label mb-4">live decision</p>
           {convo.latest ? (
             <DecisionPanel d={convo.latest} meta={meta} />
@@ -126,7 +129,10 @@ export function Try() {
           )}
         </section>
 
-        <section className={`space-y-5 ${tab === "score" ? "" : "hidden"} lg:block`} aria-label="Scoreboard">
+        <section
+          className={`scroll-slim space-y-5 ${tab === "score" ? "" : "hidden"} lg:sticky lg:top-20 lg:block lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto`}
+          aria-label="Scoreboard"
+        >
           <div className="card p-5">
             <p className="label mb-2">scoreboard · all visitors</p>
             <Scoreboard score={score} />
