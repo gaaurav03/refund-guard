@@ -5,27 +5,27 @@
 
 ---
 
-## 1. Visual direction
+## 1. Visual direction: "Claude + terminal accents" (chosen by the user, 2026-10-16)
 
-**Feel:** a calm, trustworthy bank-statement look for the guard, with a little personality for the store (Chai & Clay). It should not look like a purple-gradient AI template.
+**Feel:** Claude-like: warm cream background, an editorial serif for headings, one terracotta accent, generous whitespace, hairline borders, no heavy shadows. Calm, text-first and trustworthy. Touches borrowed from developer portfolios: mono uppercase section labels (`01 · THE DECISION`), dashed rules, a blinking cursor in the hero, and a Decider **instrument readout**. Source of truth: `frontend/src/styles/index.css` and `frontend/tailwind.config.js`.
 
-| Token | Value | Use |
-|---|---|---|
-| `ink` | `#1B1F23` | text |
-| `paper` | `#FAF7F2` | page background (warm off-white) |
-| `clay` | `#B5562C` | store brand accent, primary buttons |
-| `slate` | `#3C4A57` | guard panel chrome |
-| `approve` | `#2E7D4F` | outcome chip, bar |
-| `partial` | `#C08A1E` | outcome chip, bar |
-| `deny` | `#B3261E` | outcome chip, bar |
-| `escalate` | `#3E5BA9` | outcome chip, bar |
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `bg` | `#F5F1E8` | `#1D1C1A` | page background |
+| `surface` | `#FBF9F4` | `#262522` | cards |
+| `ink` | `#1F1E1D` | `#ECE8DF` | text |
+| `muted` | `#6B665C` | `#A39E93` | secondary text |
+| `hairline` | `#E3DCCD` | `#3A3833` | borders, rules |
+| `accent` | `#C96442` | `#D97757` | buttons, firing signals, deciding row |
+| `approve` / `partial` / `deny` / `escalate` | `#3F7D58` / `#B7862B` / `#B4432F` / `#4A63A8` | lighter variants | outcome chips |
 
-- **Type:** "Inter" for UI, "JetBrains Mono" for evidence/probabilities (numbers line up), "Fraunces" for the store wordmark and page headings only.
-- Outcome colours are always paired with an icon and a label (✓ approve, ◐ partial, ✕ deny, ↑ escalate), so colour is never the only signal.
-- Dark mode: guard panel only (slate background), so it reads as "the machine room".
-- Motion: the six signal bars animate from 0 → p over 400 ms, then the policy step that fired highlights, then the outcome chip appears. This is the money shot in the video.
+- **Type:** "Newsreader" (serif) for headings, "Inter" for UI, "JetBrains Mono" for labels, numbers and the readout.
+- **Themes:** light and dark via CSS variables. The page follows the system setting before first paint, and a toggle saves the choice in localStorage (try/catch).
+- Outcome colours are always paired with an icon and a label (✓ approve, ◐ partial, ✕ deny, ↑ escalate).
+- **Signal readout:** each of the six signals gets a bar, a threshold tick and a value. Values past their threshold turn accent-coloured. The signal that decided is highlighted with ▸. Bars animate 0 → p over 400 ms (disabled under reduced motion). This is the money shot in the video.
+- **Routes:** `/` landing (01 problem · 02 the decision · 03 how it works · 04 measured results · 05 reusable pattern), `/try` challenge, `/chat` store chat, `/review` queue. Sections 2–4 below describe the app screens. The layouts are implemented in `frontend/src/pages/`.
 
-## 2. Screen 1 — Customer chat (`/`)
+## 2. Screen 1 — Customer chat (`/chat`)
 
 ```
 ┌──────────────────────────────────────────────┐

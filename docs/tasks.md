@@ -44,17 +44,17 @@
 
 ## Oct 19 (Sun) — Confidence policy + review queue
 - [x] `policy.py` + unit tests (pulled forward to Oct 16); redesigned on Oct 16 to six Decider signals (ADR-15)
-- [ ] `rg_decisions` logging, `rg_review_queue`, `/api/review` endpoints + reviewer token
-- [ ] Bedrock reply-writing per outcome; fallback model switch (IT-05)
+- [x] `rg_decisions` logging, `rg_review_queue`, `/api/review` endpoints + reviewer token
+- [x] Bedrock reply-writing per outcome; fallback model switch (IT-05)
 - [ ] E2E tests S1–S6 pass locally
 - [ ] Benchmark cases → 50
 
 ## Oct 20 (Mon) — Frontend + challenge page
-- [ ] Vite + Tailwind theme tokens (design.md §1)
-- [ ] Screen 1 chat + decision card
-- [ ] Screen 2 challenge: persona picker, live panel (bars, evidence, outcome), scoreboard
-- [ ] Screen 3 review queue
-- [ ] Public-demo protections: rate limit, message/session caps, spend counter
+- [x] Vite + Tailwind theme tokens (design.md §1)
+- [x] Screen 1 chat + decision card
+- [x] Screen 2 challenge: persona picker, live panel (bars, evidence, outcome), scoreboard
+- [x] Screen 3 review queue
+- [x] Public-demo protections: rate limit, message/session caps, spend counter
 
 ## Oct 21 (Tue) — Benchmark + reusable pattern
 - [ ] `bench/run_bench.py` both arms; dev run → tune thresholds → freeze → test run
