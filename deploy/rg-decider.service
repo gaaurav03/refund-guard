@@ -1,0 +1,13 @@
+[Unit]
+Description=Strands Decider 2B (CPU, localhost only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=ubuntu
+ExecStart=/home/ubuntu/dec/bin/strands-decider serve StrandsAgents/strands-decider-2B-qwen3.5-v1-2610 --host 127.0.0.1 --port 8099 --device cpu
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+[Unit]
+Description=Refund Guard web app (FastAPI + built frontend) on port 80
+After=network-online.target rg-decider.service
+Wants=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/app
+EnvironmentFile=/home/ubuntu/app/.env
+ExecStart=/home/ubuntu/dec/bin/python -m uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 80 --proxy-headers
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
