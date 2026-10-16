@@ -14,7 +14,7 @@ export function Scoreboard({ score }: { score: Score | null }) {
   const s = score ?? { attempts: 0, denied: 0, escalated: 0, paid_genuine: 0, scams_succeeded: 0 };
   return (
     <div data-testid="scoreboard">
-      <Stat label="Refund attempts" value={s.attempts} />
+      <Stat label="Chats that tried a refund" value={s.attempts} />
       <Stat label="Denied" value={s.denied} />
       <Stat label="Sent to a human" value={s.escalated} />
       <Stat label="Paid (genuine)" value={s.paid_genuine} />
@@ -39,13 +39,18 @@ export function LiveFeed({ items, onSelect }: { items: Decision[]; onSelect: (d:
           <button
             type="button"
             onClick={() => onSelect(d)}
-            className="flex w-full items-center justify-between gap-2 rounded-md px-1.5 py-1 text-left hover:bg-bg"
+            className="flex w-full items-center justify-between gap-3 rounded-md px-1.5 py-1.5 text-left hover:bg-bg"
           >
-            <span className="min-w-0 truncate text-[13px] text-muted">“{d.snippet ?? d.order_id}”</span>
-            <span className="flex shrink-0 items-center gap-2">
-              <OutcomeChip outcome={d.outcome} size="sm" />
-              <span className="font-mono text-[10px] text-muted">{ago(d.created_at)}</span>
+            <span className="min-w-0">
+              <span className="block text-[13px] text-ink">
+                {d.customer_name ?? "Visitor"} <span className="text-muted">· {d.order_id}</span>
+              </span>
+              <span className="block font-mono text-[10px] text-muted">
+                {d.tries ?? 1} {(d.tries ?? 1) === 1 ? "try" : "tries"} · {ago(d.created_at)} ago
+                {d.gullible ? " · gullible" : ""}
+              </span>
             </span>
+            <OutcomeChip outcome={d.outcome} size="sm" />
           </button>
         </li>
       ))}

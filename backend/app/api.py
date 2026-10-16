@@ -277,24 +277,52 @@ def create_app(*, settings: Settings, repo: Repo, agent_factory: AgentFactory,
         return ChatOut(reply=reply, decisions=new,
                        messages_left=settings.max_messages_per_session - live.messages)
 
+    def _chats() -> list[dict[str, Any]]:
+        """Challenge decisions grouped per chat (session): one attempt = one chat, however many tries it took."""
+        by: dict[str, list[dict[str, Any]]] = {}
+        for d in repo.list_decisions():
+            if d.get("source") == "challenge":
+                by.setdefault(str(d.get("session_id") or d["decision_id"]), []).append(d)
+        chats: list[dict[str, Any]] = []
+        for rows in by.values():
+            rows.sort(key=lambda d: d.get("created_at", ""))
+            paid = [d for d in rows if d["outcome"] in ("approve", "partial")]
+            chats.append({
+                "rows": rows,
+                "latest": rows[-1],
+                "shown": paid[-1] if paid else rows[-1],  # a payout is the result that matters
+                "scam_won": any(d.get("is_scam_success") for d in rows),
+                "paid": bool(paid),
+            })
+        chats.sort(key=lambda c: c["latest"].get("created_at", ""), reverse=True)
+        return chats
+
     @app.get("/api/decisions/live")
     def live_decisions(since: str = "", limit: int = 20) -> list[dict[str, Any]]:
-        rows = [d for d in repo.list_decisions() if d.get("source") == "challenge" and d.get("created_at", "") > since]
-        rows.sort(key=lambda d: d.get("created_at", ""), reverse=True)
+        # Public feed: no visitor-written text (it would be shown to everyone); names are the demo personas.
         keep = ("decision_id", "created_at", "order_id", "requested_amount", "outcome", "approved_amount",
-                "decided_by", "policy_step", "rule_id", "signals", "key_facts", "gullible", "snippet",
+                "decided_by", "policy_step", "rule_id", "signals", "key_facts", "gullible",
                 "is_scam_success", "decision_latency_ms")
-        return [{k: d.get(k) for k in keep} for d in rows[: max(1, min(limit, 100))]]
+        out = []
+        for c in _chats():
+            if c["latest"].get("created_at", "") <= since:
+                continue
+            d = c["shown"]
+            customer = repo.get_customer(str(d.get("customer_id", ""))) or {}
+            out.append({**{k: d.get(k) for k in keep}, "created_at": c["latest"].get("created_at"),
+                        "tries": len(c["rows"]), "customer_name": customer.get("name")})
+        return out[: max(1, min(limit, 100))]
 
     @app.get("/api/scoreboard")
     def scoreboard() -> dict[str, int]:
-        rows = [d for d in repo.list_decisions() if d.get("source") == "challenge"]
+        chats = _chats()
+        unpaid = [c for c in chats if not c["paid"]]
         return {
-            "attempts": len(rows),
-            "denied": sum(d["outcome"] == "deny" for d in rows),
-            "escalated": sum(d["outcome"] == "escalate" for d in rows),
-            "paid_genuine": sum(d["outcome"] in ("approve", "partial") and not d.get("is_scam_success") for d in rows),
-            "scams_succeeded": sum(bool(d.get("is_scam_success")) for d in rows),
+            "attempts": len(chats),
+            "denied": sum(c["latest"]["outcome"] == "deny" for c in unpaid),
+            "escalated": sum(c["latest"]["outcome"] == "escalate" for c in unpaid),
+            "paid_genuine": sum(c["paid"] and not c["scam_won"] for c in chats),
+            "scams_succeeded": sum(c["scam_won"] for c in chats),
         }
 
     @app.get("/api/review")

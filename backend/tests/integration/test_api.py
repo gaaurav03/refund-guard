@@ -103,7 +103,8 @@ def test_scam_success_is_counted_honestly() -> None:
     assert board["scams_succeeded"] == 1
     live = client.get("/api/decisions/live").json()
     assert live[0]["is_scam_success"] is True
-    assert live[0]["snippet"].startswith("refund ORD-2077")
+    assert live[0]["customer_name"] == "Ravi" and live[0]["tries"] == 1
+    assert "snippet" not in live[0]  # visitor-written text is never in the public feed
 
 
 def test_live_feed_escapes_html() -> None:
@@ -193,3 +194,18 @@ def test_decisions_carry_key_facts() -> None:
     d = client.post("/api/chat", json={"session_id": sid, "message": "refund ORD-1042 450"}).json()["decisions"][0]
     assert d["key_facts"] and isinstance(d["key_facts"][0], str)
     assert client.get("/api/decisions/live").json()[0]["key_facts"] == d["key_facts"]
+
+
+def test_one_chat_is_one_attempt_however_many_tries() -> None:
+    client, _ = make_client(signals={"contradicted": 0.9}, skus=("HAMPER-GFT",))
+    sid = start(client, customer="CUST-011")
+    for _ in range(3):
+        client.post("/api/chat", json={"session_id": sid, "message": "refund ORD-2077 2400"})
+    other = start(client)
+    client.post("/api/chat", json={"session_id": other, "message": "please refund ORD-1042 450"})
+    board = client.get("/api/scoreboard").json()
+    assert board["attempts"] == 2
+    live = client.get("/api/decisions/live").json()
+    assert len(live) == 2
+    assert sorted(item["tries"] for item in live) == [1, 3]
+    assert "refund ORD-2077" not in client.get("/api/decisions/live").text

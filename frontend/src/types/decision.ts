@@ -30,6 +30,8 @@ export interface Decision {
   key_facts: string[];
   gullible: boolean;
   snippet?: string;
+  tries?: number; // public feed: refund tries in this chat
+  customer_name?: string; // public feed: demo persona name
   is_scam_success?: boolean;
   decision_latency_ms: number;
   // review queue only
