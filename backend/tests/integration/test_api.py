@@ -176,3 +176,20 @@ def test_reviewer_cannot_pay_more_than_requested() -> None:
         "decision_id"]
     r = client.post(f"/api/review/{did}", headers={"x-reviewer-token": TOKEN}, json={"action": "approve", "amount": 9999})
     assert r.status_code == 422
+
+
+def test_meta_exposes_signals_thresholds_and_labels() -> None:
+    client, _ = make_client()
+    meta = client.get("/api/meta").json()
+    names = [s["name"] for s in meta["signals"]]
+    assert names == ["args_grounded", "contradicted", "concrete_problem", "non_evidence", "over_ask", "uncertain"]
+    assert next(s for s in meta["signals"] if s["name"] == "args_grounded")["fires_when"] == "below"
+    assert "decider:contradicted" in meta["policy_steps"] and "PC-03" in meta["rules"]
+
+
+def test_decisions_carry_key_facts() -> None:
+    client, _ = make_client()
+    sid = start(client)
+    d = client.post("/api/chat", json={"session_id": sid, "message": "refund ORD-1042 450"}).json()["decisions"][0]
+    assert d["key_facts"] and isinstance(d["key_facts"][0], str)
+    assert client.get("/api/decisions/live").json()[0]["key_facts"] == d["key_facts"]

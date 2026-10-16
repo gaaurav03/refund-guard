@@ -23,6 +23,7 @@ from .evidence import build_state, refunded_on_order
 from .extraction import ConverseFn, extract_claim
 from .ledger import Ledger
 from .policy import Thresholds, fallback_decision
+from .state_render import key_facts
 
 log = logging.getLogger(__name__)
 
@@ -70,10 +71,11 @@ class RefundGuard(InterventionHandler):
         tool_use_id = event.tool_use["toolUseId"]
         args = event.tool_use.get("input") or {}
         t0 = time.perf_counter()
-        decision = self._decide(args, session)
+        decision, facts = self._decide(args, session)
         total_ms = (time.perf_counter() - t0) * 1000
 
         record = self._record(decision, args, session, tool_use_id, total_ms)
+        record["key_facts"] = facts
         try:
             self._repo.put_decision(record)
             if decision.outcome == "escalate":
@@ -91,14 +93,15 @@ class RefundGuard(InterventionHandler):
             return Guide(feedback=decision.agent_feedback)
         return Deny(reason=decision.agent_feedback)
 
-    def _decide(self, args: dict[str, Any], session: Any) -> Decision:
+    def _decide(self, args: dict[str, Any], session: Any) -> tuple[Decision, list[str]]:
+        """Returns the decision and the KEY FACTS Decider saw (empty when it was not reached)."""
         try:
             order_id = str(args.get("order_id", "")).strip()
             order = self._repo.get_order(order_id) if order_id else None
             if order is None:
                 return decide(client=self._decider, thresholds=self._t, high_value_escalate_inr=self._high_value,
                               order_found=False, order_customer_id=None, session_customer_id=session.customer_id,
-                              state=None, refunded_on_order=0.0)
+                              state=None, refunded_on_order=0.0), []
             refunds = self._repo.list_refunds(session.customer_id)
             claim = extract_claim(self._converse, session.recent_customer_messages, order["items"])
             state = build_state(
@@ -112,7 +115,7 @@ class RefundGuard(InterventionHandler):
                 recent_messages=session.recent_customer_messages,
                 today=self._today(),
             )
-            return decide(
+            decision = decide(
                 client=self._decider,
                 thresholds=self._t,
                 high_value_escalate_inr=self._high_value,
@@ -122,9 +125,10 @@ class RefundGuard(InterventionHandler):
                 state=state,
                 refunded_on_order=refunded_on_order(refunds, order_id),
             )
+            return decision, key_facts(state)
         except Exception as e:
             log.warning("guard could not build a decision (%s: %s); escalating", type(e).__name__, e)
-            return fallback_decision(type(e).__name__)
+            return fallback_decision(type(e).__name__), []
 
     @staticmethod
     def _record(decision: Decision, args: dict[str, Any], session: Any, tool_use_id: str,

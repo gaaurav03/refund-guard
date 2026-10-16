@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 
 from .agent.session import Session
 from .config import Settings
+from .guard.questions import QUESTIONS
 from .security.limits import Limits, ip_hash
 from .store import seed_data
 from .store.repo import Repo
@@ -36,6 +37,39 @@ MAX_LIVE_SESSIONS = 500
 PRICE_IN_PER_1K_USD = 0.0002
 PRICE_OUT_PER_1K_USD = 0.0008
 EXTRACTION_TOKENS_ESTIMATE = (700, 120)  # one extraction call per refund attempt
+
+SIGNAL_LABELS = {
+    "args_grounded": "Arguments grounded in what the customer said",
+    "contradicted": "Records contradict the claim",
+    "concrete_problem": "Concrete problem described",
+    "non_evidence": "Pressure or instructions instead of evidence",
+    "over_ask": "Asks for more than the affected items",
+    "uncertain": "Customer unsure / matter of taste",
+}
+
+POLICY_STEP_LABELS = {
+    "decider:args_ungrounded": "Refund arguments don't match what the customer said",
+    "decider:contradicted": "Store records contradict the claim",
+    "decider:pressure_with_problem": "Real problem, but with pressure: a human checks",
+    "decider:non_evidence": "Pressure or instructions instead of evidence",
+    "decider:uncertain": "Customer is unsure: a human checks",
+    "decider:partial": "Real problem with some items: refund capped to those items",
+    "decider:approve": "Concrete problem, nothing contradicts it",
+    "policy:no_items_identified": "No item identified: a human checks",
+    "policy:no_concrete_problem": "No concrete problem established: a human checks",
+}
+
+PRECHECK_LABELS = {
+    "PC-01": "Order not found",
+    "PC-02": "Order belongs to someone else",
+    "PC-03": "Amount is zero or larger than the order",
+    "PC-04": "Order already refunded",
+    "PC-05": "Claimed item is not in the order",
+    "PC-06": "Return window closed (changed mind)",
+    "PC-07": "Return window closed: a human checks",
+    "PC-08": "High-value refund: a human checks",
+    "PC-09": "Order still in transit",
+}
 
 AgentFactory = Callable[[Session], Any]  # returns a callable agent: agent(msg, invocation_state=...) -> result
 
@@ -159,6 +193,25 @@ def create_app(*, settings: Settings, repo: Repo, agent_factory: AgentFactory,
         return {"ok": True, "decider": decider, "budget_exhausted": limits.budget_exhausted(),
                 "spend_today_usd": limits.spend_today()}
 
+    @app.get("/api/meta")
+    def meta() -> dict[str, Any]:
+        thresholds = {
+            "args_grounded": settings.args_grounded_threshold,
+            "contradicted": settings.contradicted_threshold,
+            "concrete_problem": settings.concrete_problem_threshold,
+            "non_evidence": settings.non_evidence_threshold,
+            "over_ask": settings.over_ask_threshold,
+            "uncertain": settings.uncertain_threshold,
+        }
+        return {
+            "signals": [{"name": n, "label": SIGNAL_LABELS[n], "instructions": QUESTIONS[n]["instructions"],
+                         "threshold": thresholds[n], "fires_when": "below" if n == "args_grounded" else "above"}
+                        for n in QUESTIONS],
+            "policy_steps": POLICY_STEP_LABELS,
+            "rules": PRECHECK_LABELS,
+            "max_messages": settings.max_messages_per_session,
+        }
+
     @app.get("/api/personas")
     def list_personas() -> list[dict[str, Any]]:
         return personas()
@@ -227,8 +280,8 @@ def create_app(*, settings: Settings, repo: Repo, agent_factory: AgentFactory,
         rows = [d for d in repo.list_decisions() if d.get("source") == "challenge" and d.get("created_at", "") > since]
         rows.sort(key=lambda d: d.get("created_at", ""), reverse=True)
         keep = ("decision_id", "created_at", "order_id", "requested_amount", "outcome", "approved_amount",
-                "decided_by", "policy_step", "rule_id", "signals", "gullible", "snippet", "is_scam_success",
-                "decision_latency_ms")
+                "decided_by", "policy_step", "rule_id", "signals", "key_facts", "gullible", "snippet",
+                "is_scam_success", "decision_latency_ms")
         return [{k: d.get(k) for k in keep} for d in rows[: max(1, min(limit, 100))]]
 
     @app.get("/api/scoreboard")
