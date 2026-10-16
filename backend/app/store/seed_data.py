@@ -119,4 +119,4 @@ REFUNDS: list[dict[str, Any]] = [
 
 
 def order_amount(order: dict[str, Any]) -> float:
-    return round(sum(i["unit_price"] * i["qty"] for i in order["items"]), 2)
+    return round(float(sum(i["unit_price"] * i["qty"] for i in order["items"])), 2)
