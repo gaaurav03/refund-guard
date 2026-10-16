@@ -244,7 +244,7 @@ export function Landing() {
               cancellations or discount codes.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href={REPO} className="btn-ghost">Read the code ↗</a>
+              <a href={`${REPO}/tree/main/decision-patterns/claim-vs-evidence`} className="btn-ghost">Read the pattern ↗</a>
               <Link to="/try" className="btn-primary">Now try to beat it →</Link>
             </div>
           </div>
@@ -253,19 +253,25 @@ export function Landing() {
               title="1 · serve Decider 2B"
               lines={[
                 "$ pip install strands-decider strands-agents",
+                "$ pip install -e decision-patterns/claim-vs-evidence",
                 "$ strands-decider serve StrandsAgents/strands-decider-2B-qwen3.5-v1-2610 --port 8099",
               ]}
             />
             <Terminal
               title="2 · guard your tool"
-              copy={'agent = Agent(model=BedrockModel(...), tools=[issue_refund], interventions=[RefundGuard(...)])'}
+              copy={
+                'guard = ClaimEvidenceGuard(tool="apply_store_credit", decider=HttpDeciderClient(url), gather=gather)\n' +
+                "agent = Agent(model=BedrockModel(...), tools=[apply_store_credit], interventions=[guard])"
+              }
               lines={[
-                "# before_tool_call → pre-checks → 6 Decider signals → policy",
-                "agent = Agent(",
-                "    model=BedrockModel(model_id=...),",
-                "    tools=[issue_refund],",
-                "    interventions=[RefundGuard(...)],  # Deny / Guide / Proceed",
+                "# any risky tool: refunds, credits, cancellations",
+                "guard = ClaimEvidenceGuard(",
+                '    tool="apply_store_credit",',
+                "    decider=HttpDeciderClient(url),",
+                "    gather=gather,  # your records + their words",
                 ")",
+                "agent = Agent(model=BedrockModel(...),",
+                "    tools=[apply_store_credit], interventions=[guard])",
               ]}
             />
           </div>

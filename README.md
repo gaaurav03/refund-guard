@@ -31,7 +31,7 @@ _Benchmark in progress: Decider 2B vs. a panel of Bedrock LLM judges. See [docs/
 
 ## Reusable pattern
 
-_Coming in [`decision-patterns/claim-vs-evidence/`](decision-patterns/claim-vs-evidence/)._
+[`decision-patterns/claim-vs-evidence/`](decision-patterns/claim-vs-evidence/): put a claim-vs-evidence check in front of any risky tool (refunds, store credit, cancellations). Six typed yes/no questions, a fixed option set `approve | partial | deny | escalate`, a Strands `InterventionHandler` (`ClaimEvidenceGuard`) and a runnable store-credit example. This app imports it.
 
 ## Run the tests
 

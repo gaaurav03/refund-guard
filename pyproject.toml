@@ -7,7 +7,7 @@ license = "Apache-2.0"
 
 [tool.pytest.ini_options]
 pythonpath = ["backend"]
-testpaths = ["backend/tests"]
+testpaths = ["backend/tests", "decision-patterns/claim-vs-evidence/tests"]
 asyncio_mode = "auto"
 markers = [
     "live: needs a running Decider server and/or AWS credentials",
@@ -23,13 +23,14 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.ruff.lint.per-file-ignores]
 "backend/app/agent/build.py" = ["E501"]  # prompt text
-"bench/*.py" = ["E501"]  # case data and fact sentences
+"bench/*.py" = ["E501"]
+"decision-patterns/claim-vs-evidence/examples/*.py" = ["E501"]  # sample records  # case data and fact sentences
 "backend/tests/**/*.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["backend/app/guard", "backend/app/models.py", "backend/app/api.py", "backend/app/security"]
+files = ["decision-patterns/claim-vs-evidence/claim_vs_evidence", "backend/app/guard", "backend/app/models.py", "backend/app/api.py", "backend/app/security"]
 
 [[tool.mypy.overrides]]
 module = ["boto3.*", "botocore.*", "boto3"]

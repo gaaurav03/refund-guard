@@ -59,7 +59,7 @@
 ## Oct 21 (Tue) — Benchmark + reusable pattern
 - [ ] `bench/run_bench.py` both arms; dev run → tune thresholds → freeze → test run
 - [ ] `bench/results/RESULTS.md`, failures table (honest)
-- [ ] `decision-patterns/claim-vs-evidence/`: generic `ClaimVerifier`, questions, policy, `example_discount.py`, README (decision.md §8)
+- [x] `decision-patterns/claim-vs-evidence/`: `ClaimEvidenceGuard`, questions, policy, `examples/store_credit.py`, README, 23 tests (decision.md §8). **Done Oct 16.**
 - [ ] Update decision.md if thresholds changed
 
 ## Oct 22 (Wed) — Deploy to AWS + article draft

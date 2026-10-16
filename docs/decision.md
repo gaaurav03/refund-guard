@@ -269,17 +269,26 @@ class RefundGuard(InterventionHandler):            # backend/app/guard/handler.p
 
 ## 8. Reusable pattern: `decision-patterns/claim-vs-evidence/`
 
-A generic **claim-vs-evidence verifier** for any risky tool: refunds, account credits, cancellations, discount codes.
+**Built Oct 16.** A standalone, installable package (`claim_vs_evidence`) with its own README, tests and a
+runnable non-refund example. **The app imports it**, so the published pattern is the code behind the results.
 
-README outline (labelled "Reusable Decider 2B decision pattern"):
-1. **What it does.** Decides whether a tool call's claim is grounded in evidence, ending in a fixed option set.
-2. **Typed questions and options.** The six `noul` evidence questions, the option set, and how to rename them for a new domain.
-3. **Evidence schema.** A generic `ClaimState{subject_id, records{}, history{}, claim{}, quotes[], messages[], requested_value}` + KEY FACTS builder + an adapter example (refunds).
-4. **Wiring.** `ClaimVerifier(InterventionHandler)` configured with `tool_name`, `build_state(args, ctx)`, `prechecks[]`, `policy`.
-5. **Decision policy.** Ordered steps, thresholds, a cap function, fail-closed default.
-6. **How to use it.** A ~15-line example for an `apply_discount_code` tool.
-7. **What we learned.** One big `choice` question vs. decomposed `noul` questions (the §1 table).
-8. **Measured results** and **limitations**: Decider is experimental; hard cases go to a human.
+| Piece | File | Notes |
+|---|---|---|
+| Typed questions | `claim_vs_evidence/questions.py` | Six `noul` questions; `Wording` adapts them to a new domain. Defaults = the refund questions, word for word (locked by `backend/tests/unit/test_pattern_wording.py`) |
+| Option set + policy | `claim_vs_evidence/policy.py` | `approve \| partial \| deny \| escalate`, ordered steps of §5, `Thresholds`, `Verdict.step` |
+| Decider client | `claim_vs_evidence/client.py` | `/v1/systemone`, fails closed (`DeciderError`), fake for tests |
+| Wiring | `claim_vs_evidence/guard.py` | `ClaimEvidenceGuard(InterventionHandler)`: `tool`, `gather(tool_input, invocation_state) -> Evidence \| Verdict`, `on_decision`; `partial` rewrites the amount with Strands `Transform` |
+| Example | `examples/store_credit.py` | `apply_store_credit` for a failed coupon; real Bedrock + Decider |
+
+How the app uses it: `backend/app/guard/questions.py`, `policy.py` and `decider_client.py` are thin adapters over the
+package (refund cap, agent messages, typed `DeciderResult`). `RefundGuard` keeps its app-specific glue (claim
+extraction, DynamoDB log, review queue, ledger). Replaying all 50 saved benchmark answers through the package gives
+identical outcomes and amounts.
+
+**Store-credit example, live (Oct 16):** genuine failed coupon → approve 300; asked 1500 with "support promised" → partial,
+**Transform paid 300**; false "coupon failed" (records: applied) → paid with raw records (`contradicted` 0.55) and with a
+record-only fact (0.57), **denied with a claim-vs-record key fact (0.89)**. Lesson recorded in the pattern README: write
+KEY FACTS that put the claim and the record side by side.
 
 ---
 
@@ -302,4 +311,5 @@ README outline (labelled "Reusable Decider 2B decision pattern"):
 | ADR-13 | Declare only `#guardrails` | Rules require exactly one pattern tag |
 | ADR-14 | Own small Decider client following `strands_decider/schema.py` (NOTICE) | The pip package ships no client module |
 | **ADR-15** | **Six `noul` evidence questions + KEY FACTS, combined by an ordered code policy** | Dev set: accuracy 75% → 94%, escalations 88% → 25%, attacks paid 0/6 → 0/6. Narrow questions suit a 2B decision model; code keeps the combination explainable |
+| ADR-17 | Pattern extracted into an installable package that the app imports; `partial` caps via Strands `Transform` in the generic guard | One source of truth for questions/policy (results stay valid); `Transform` lets other builders cap amounts without changing their tool |
 | ADR-16 | Gullible mode for demo and benchmark | The real chat LLM refuses obvious attacks, hiding the guard; gullible mode shows Decider stopping what gets past the LLM |

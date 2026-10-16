@@ -1,5 +1,7 @@
 strands-agents==1.61.0
 strands-decider==0.1.0
+# the reusable pattern (install from the repo root)
+-e ./decision-patterns/claim-vs-evidence
 boto3>=1.43,<2
 fastapi>=0.143,<1
 uvicorn[standard]>=0.54,<1

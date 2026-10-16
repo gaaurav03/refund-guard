@@ -1,0 +1,4 @@
+httpx>=0.27
+
+[strands]
+strands-agents==1.61.0
