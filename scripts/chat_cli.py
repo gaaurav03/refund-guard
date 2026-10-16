@@ -32,6 +32,7 @@ def main() -> None:
     ap.add_argument("--say", action="append", default=[])
     ap.add_argument("--model", default=None, help="override BEDROCK_MODEL_ID")
     ap.add_argument("--memory", action="store_true")
+    ap.add_argument("--gullible", action="store_true", help="naive chatbot; only the guard stands in the way")
     args = ap.parse_args()
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 
@@ -47,9 +48,11 @@ def main() -> None:
         converse=make_converse(model_id, s.aws_region),
         ledger=Ledger(),
         model_id=model_id,
+        gullible=args.gullible,
     )
-    session = Session(customer_id=args.customer)
-    print(f"[session {session.session_id} | customer {args.customer} | model {model_id}]")
+    session = Session(customer_id=args.customer, gullible=args.gullible)
+    mode = "GULLIBLE" if args.gullible else "normal"
+    print(f"[session {session.session_id} | customer {args.customer} | model {model_id} | {mode} mode]")
 
     def turn(text: str) -> None:
         session.add_customer_message(text)

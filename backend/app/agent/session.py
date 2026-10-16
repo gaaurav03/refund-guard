@@ -13,6 +13,7 @@ from ..models import MAX_MESSAGE_CHARS, MAX_RECENT_MESSAGES
 class Session:
     customer_id: str  # from login / persona picker, never from the LLM
     mode: Literal["chat", "challenge", "bench"] = "chat"
+    gullible: bool = False  # Layer 1 deliberately naive; the guard is unchanged
     session_id: str = field(default_factory=lambda: f"S-{uuid.uuid4().hex[:12]}")
     recent_customer_messages: list[str] = field(default_factory=list)
     decisions: list[dict[str, Any]] = field(default_factory=list)

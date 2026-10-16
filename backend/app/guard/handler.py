@@ -135,6 +135,7 @@ class RefundGuard(InterventionHandler):
             "created_at": datetime.now(UTC).isoformat(),
             "session_id": session.session_id,
             "source": session.mode,
+            "gullible": bool(getattr(session, "gullible", False)),
             "customer_id": session.customer_id,
             "tool_use_id": tool_use_id,
             "order_id": str(args.get("order_id", "")),
