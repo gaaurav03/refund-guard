@@ -57,9 +57,10 @@ export function Terminal({ lines, copy, title }: { lines: string[]; copy?: strin
           {done ? "copied ✓" : "copy"}
         </button>
       </div>
-      <pre className="overflow-x-auto px-3.5 py-3 leading-relaxed">
+      {/* Wrap long lines with a hanging indent (no sideways scrolling); keep code indentation intact. */}
+      <pre className="whitespace-pre-wrap break-all px-3.5 py-3 leading-relaxed sm:break-normal sm:[overflow-wrap:anywhere]">
         {lines.map((l, n) => (
-          <div key={n}>
+          <div key={n} className="pl-[2ch] -indent-[2ch]">
             {l.startsWith("$ ") ? (
               <>
                 <span className="text-accent">$ </span>
