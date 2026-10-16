@@ -110,3 +110,20 @@ describe("WallOfAttempts", () => {
     expect(screen.getAllByRole("row")).toHaveLength(1 + 6);
   });
 });
+
+describe("ChatPanel", () => {
+  it("survives a browser whose scrollIntoView returns a Promise (Chromium), re-rendering and unmounting", async () => {
+    const { ChatPanel } = await import("./ChatPanel");
+    const orig = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = (() => Promise.resolve()) as unknown as typeof orig;
+    try {
+      const props = { busy: false, placeholder: "type", onSend: () => undefined };
+      const { rerender, unmount } = render(<ChatPanel {...props} messages={[]} />);
+      rerender(<ChatPanel {...props} messages={[{ role: "user", text: "hi" }]} />);
+      expect(screen.getByText("hi")).toBeTruthy();
+      unmount();
+    } finally {
+      Element.prototype.scrollIntoView = orig;
+    }
+  });
+});

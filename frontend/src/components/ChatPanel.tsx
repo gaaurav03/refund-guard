@@ -27,7 +27,10 @@ export function ChatPanel({
 }) {
   const [text, setText] = useState("");
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView?.({ behavior: "smooth", block: "end" }), [messages, busy]);
+  // Braces matter: newer Chromium returns a Promise from scrollIntoView, and React would call it as a cleanup.
+  useEffect(() => {
+    end.current?.scrollIntoView?.({ behavior: "smooth", block: "end" });
+  }, [messages, busy]);
 
   const submit = (e?: FormEvent) => {
     e?.preventDefault();
