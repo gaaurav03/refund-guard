@@ -56,4 +56,6 @@ if DIST.is_dir():
         file = (DIST / path).resolve()
         if path and file.is_file() and DIST.resolve() in file.parents:
             return FileResponse(file)
-        return FileResponse(DIST / "index.html")
+        # Always revalidate the page shell, so a new deploy is picked up on the next load instead of
+        # the browser reusing a stale index.html that points at old JavaScript.
+        return FileResponse(DIST / "index.html", headers={"Cache-Control": "no-cache"})
