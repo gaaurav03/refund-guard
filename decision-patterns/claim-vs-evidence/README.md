@@ -90,6 +90,20 @@ agent(message, invocation_state={"account_id": "A-2", "messages": [message]})
 
 A complete runnable version is in [`examples/store_credit.py`](examples/store_credit.py).
 
+### Check arguments in code, not with the model
+
+`claim_vs_evidence.checks.args_mismatch(messages, amount=..., order_id=...)` returns a reason when the person
+**typed** an amount and the call asks for more, or typed an order id and the call is for a different one. Use it
+as a pre-check in `gather` (return a `Verdict`), before Decider is asked anything. In our benchmark Decider missed
+"the agent inflated the amount" and most LLM judges misread that question too; plain code gets it right whenever
+the person typed a number, and stays silent when they did not.
+
+```python
+from claim_vs_evidence import args_mismatch
+if args_mismatch(invocation_state["messages"], amount=float(tool_input["amount"]), order_id=tool_input["order_id"]):
+    return Verdict(outcome="deny", step="precheck:args_mismatch")   # guide the agent to confirm
+```
+
 **On `partial`, the guard rewrites the tool's `amount` argument to the cap** (Strands `Transform`)
 before your tool runs. Pass `amount_arg=None` if your tool enforces the amount itself.
 
@@ -144,6 +158,7 @@ Latency (six questions, ~1,050 input tokens): ~27 s per decision on an EC2 `m7i-
 |---|---|
 | `claim_vs_evidence/questions.py` | The six typed questions, `Wording` for your domain |
 | `claim_vs_evidence/policy.py` | `Thresholds`, `apply_policy`, the `Verdict` and its `step` names |
+| `claim_vs_evidence/checks.py` | `args_mismatch` / `mentioned`: plain-code argument check (amounts, order ids typed) |
 | `claim_vs_evidence/client.py` | Minimal `/v1/systemone` client (fails closed), plus a fake for tests |
 | `claim_vs_evidence/guard.py` | `ClaimEvidenceGuard`, the Strands `InterventionHandler` |
 | `examples/store_credit.py` | Runnable example on a non-refund tool |

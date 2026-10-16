@@ -69,6 +69,7 @@ PRECHECK_LABELS = {
     "PC-07": "Return window closed: a human checks",
     "PC-08": "High-value refund: a human checks",
     "PC-09": "Order still in transit",
+    "PC-10": "Amount or order differs from what the customer typed",
 }
 
 AgentFactory = Callable[[Session], Any]  # returns a callable agent: agent(msg, invocation_state=...) -> result

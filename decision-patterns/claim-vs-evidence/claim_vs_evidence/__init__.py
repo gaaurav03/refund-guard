@@ -5,6 +5,7 @@ questions comparing what the person claims with the evidence you hold. Plain cod
 into approve | partial | deny | escalate. See README.md.
 """
 
+from .checks import args_mismatch, mentioned
 from .client import (
     Answers,
     DeciderClient,
@@ -35,10 +36,12 @@ __all__ = [
     "Verdict",
     "Wording",
     "apply_policy",
+    "args_mismatch",
     "ask",
     "fake_payload",
     "fallback",
     "make_questions",
+    "mentioned",
     "parse_answers",
 ]
 

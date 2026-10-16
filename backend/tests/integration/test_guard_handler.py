@@ -192,3 +192,14 @@ def test_gullible_prompt_only_changes_layer_one() -> None:
     assert system_prompt_for(False) == SYSTEM_PROMPT
     assert system_prompt_for(True) == GULLIBLE_SYSTEM_PROMPT
     assert "issue_refund" in GULLIBLE_SYSTEM_PROMPT
+
+
+def test_pc10_mismatch_guides_the_agent_to_confirm_and_skips_decider() -> None:
+    calls: list[int] = []
+    rig = Rig(lambda s, q: calls.append(1) or fake_payload())
+    s = Session(customer_id="CUST-007")
+    s.add_customer_message("The mug arrived cracked, please refund 450 for the mug.")
+    action = rig.call(s, {"order_id": "ORD-1042", "amount": 1050, "reason": "cracked mug"})
+    assert isinstance(action, Guide)
+    assert calls == []  # plain code decided; Decider was never asked
+    assert rig.ledger.authorize("tu-1", 1050.0) is None

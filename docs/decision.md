@@ -182,6 +182,7 @@ These are cheap rules, **not** ML. The first rule that matches ends the decision
 | `PC-07` | `return_window_status = closed` (any other reason) | `escalate` |
 | `PC-08` | `requested_amount` > `HIGH_VALUE_ESCALATE_INR` (default 10,000) | `escalate` |
 | `PC-09` | `delivery_status` ∈ {`not_shipped`, `in_transit`} and `claimed_reason` = `not_delivered` | `escalate` (tell customer to wait; human may cancel) |
+| `PC-10` | The customer **typed** an amount and the call asks for more, or typed an order id and the call is for another order (`claim_vs_evidence.checks.args_mismatch`, plain code) | `deny` + **Guide** the agent to confirm with the customer (added Oct 16) |
 
 Rules handle what arithmetic and lookups can check. Decider handles the judgement calls rules cannot make, such as whether "cracked mug, have a photo" is a concrete problem, or whether "my manager approved it" is pressure rather than evidence.
 
@@ -299,9 +300,9 @@ KEY FACTS that put the claim and the record side by side.
 |---|---|---|---|
 | V3 | Strictly literal `args_grounded` + code facts (amounts / order ids the customer typed) | Overpayment ₹2,250 → ₹750 on 60 cases, but **4 honest customers refused** (asked for more than the damaged item; V2 paid a fair capped partial). Cause: a clause tying "grounded" to the damaged items' price | **No** |
 | V3c | V3 + code rule (named amount / order id ≠ tool call → deny) | Same as V3 | No |
-| V2 + code rule | Today's questions + the code rule only | 55/60 vs 54/60, ₹500 less overpaid, no honest customer refused | candidate |
+| **V2 + code rule (PC-10) + unit cap** | Today's questions + PC-10 + `claimed_units` | Replayed on all 74 cases: changes only X-002, X-005 (₹500 saved), F-009; test split unchanged (32/34, 0/20); no honest customer refused | **Yes: production (Oct 16)** |
 | Unit-level cap | `claimed_units` from extraction | All 60 saved V2 decisions unchanged; "one of two packs" now pays 300 | **Yes** (production) |
-| V4 | V2 questions, literal `args_grounded` **without** V3's clause, code facts + rule, new `wants_refund` question (can only block a payout) | Tested on 14 FRESH cases committed before the run (`split: fresh`) | pending |
+| V4 | V2 questions, literal `args_grounded` **without** V3's clause, code facts + rule, new `wants_refund` question (can only block a payout) | FRESH (14): 13/14 vs V2 12/14, no honest customer refused. But `wants_refund` never fired (0.58–0.81 on every case, 0.71 on "send a new mug, I don't want my money back"), and test-split escalations rose 6 → 16 | **No** |
 
 Caveat: V3/V4 were designed after seeing the test split's failures, so their test-split numbers are not clean
 held-out results. The EXTRA (10) and FRESH (14) splits were written before the respective runs.
@@ -328,4 +329,5 @@ held-out results. The EXTRA (10) and FRESH (14) splits were written before the r
 | ADR-14 | Own small Decider client following `strands_decider/schema.py` (NOTICE) | The pip package ships no client module |
 | **ADR-15** | **Six `noul` evidence questions + KEY FACTS, combined by an ordered code policy** | Dev set: accuracy 75% → 94%, escalations 88% → 25%, attacks paid 0/6 → 0/6. Narrow questions suit a 2B decision model; code keeps the combination explainable |
 | ADR-17 | Pattern extracted into an installable package that the app imports; `partial` caps via Strands `Transform` in the generic guard | One source of truth for questions/policy (results stay valid); `Transform` lets other builders cap amounts without changing their tool |
+| ADR-18 | Production = V2 questions + PC-10 (plain-code argument check) + unit-level cap; V3/V4 rejected | Exact matching (amounts, order ids, unit counts) belongs in code: Decider missed it and most LLMs misread the question. Adding Decider questions only helps if their scores separate the cases (`wants_refund` did not) |
 | ADR-16 | Gullible mode for demo and benchmark | The real chat LLM refuses obvious attacks, hiding the guard; gullible mode shows Decider stopping what gets past the LLM |

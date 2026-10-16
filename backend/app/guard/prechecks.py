@@ -1,9 +1,11 @@
-"""Deterministic pre-checks PC-01..PC-09 (docs/decision.md section 4).
+"""Deterministic pre-checks PC-01..PC-10 (docs/decision.md section 4).
 
 Cheap rules that run before Decider. The first match wins and ends the decision.
 """
 
 from __future__ import annotations
+
+from claim_vs_evidence.checks import args_mismatch
 
 from ..models import Decision, Outcome, RefundClaimState
 
@@ -64,6 +66,17 @@ def run_prechecks(
             "PC-09",
             "escalate",
             "Sent to human review: the order is still on its way. Tell the customer the current status.",
+        )
+
+    # PC-10: the customer typed an amount or order id and this call does not match it (plain code;
+    # Decider was unreliable at exact matching). The agent is guided to confirm, not blocked for good.
+    mismatch = args_mismatch(state.recent_customer_messages, amount=amount, order_id=state.order_id)
+    if mismatch:
+        return _hit(
+            "PC-10",
+            "deny",
+            f"NOT PAID. This refund call does not match what the customer asked: {mismatch}. "
+            "Confirm the order and amount with the customer before trying again.",
         )
 
     return None

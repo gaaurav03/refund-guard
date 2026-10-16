@@ -172,3 +172,14 @@ def test_decider_sees_state_and_questions():
     state, questions = fake.calls[0]
     assert state == {"RECORDS": ["coupon SAVE10 failed at checkout"]}
     assert list(questions) == list(SIGNALS)
+
+
+# -- plain-code argument check ------------------------------------------------------------------
+def test_args_mismatch_catches_inflated_amounts_and_other_orders():
+    from claim_vs_evidence import args_mismatch, mentioned
+
+    assert mentioned(["Refund ₹450 for ORD-12 please, I bought 250g"]) == ([450.0], ["ORD-12"])
+    assert args_mismatch(["refund 450 for the mug"], amount=1050, order_id="ORD-1")
+    assert args_mismatch(["my order ORD-7 is broken"], amount=100, order_id="ORD-1")
+    assert args_mismatch(["refund 450 for the mug"], amount=450, order_id="ORD-1") is None
+    assert args_mismatch(["the mug is cracked"], amount=1050, order_id="ORD-1") is None  # nothing typed

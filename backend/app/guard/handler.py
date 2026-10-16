@@ -89,7 +89,7 @@ class RefundGuard(InterventionHandler):
 
         if decision.outcome in ("approve", "partial"):
             return Proceed()
-        if decision.policy_step == "decider:args_ungrounded":
+        if decision.policy_step in ("decider:args_ungrounded", "precheck:PC-10"):  # confirm with the customer
             return Guide(feedback=decision.agent_feedback)
         return Deny(reason=decision.agent_feedback)
 

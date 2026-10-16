@@ -16,7 +16,6 @@ V4  V2 questions, with args_grounded made literal WITHOUT V3's "price of the dam
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -26,6 +25,7 @@ from app.guard.policy import Thresholds, apply_policy, partial_cap
 from app.guard.questions import ARGS_GROUNDED, QUESTIONS
 from app.guard.state_render import render_state
 from app.models import RefundClaimState
+from claim_vs_evidence.checks import AMOUNT_RE, ORDER_RE
 
 
 @dataclass
@@ -107,8 +107,9 @@ LITERAL_ARGS = (
 )
 V3_QUESTIONS = {k: (dict(v, instructions=LITERAL_ARGS) if k == ARGS_GROUNDED else v) for k, v in QUESTIONS.items()}
 
-_ORDER_RE = re.compile(r"\bORD-\d+\b", re.I)
-_AMOUNT_RE = re.compile(r"(?<![\w.])(?:₹\s*|rs\.?\s*|inr\s*)?(\d{2,6}(?:\.\d{1,2})?)(?!\s*(?:k\b|m\b|g\b|gm\b|ml\b|%|x\b|\d|followers|people|days|years))", re.I)
+# Same extraction as production PC-10 (claim_vs_evidence.checks), so the variants measure what ships.
+_ORDER_RE = ORDER_RE
+_AMOUNT_RE = AMOUNT_RE
 
 
 def mentioned(s: RefundClaimState) -> tuple[list[float], list[str]]:
