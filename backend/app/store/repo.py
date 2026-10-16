@@ -55,6 +55,12 @@ class Repo(Protocol):
     def put_refund(self, refund: dict[str, Any]) -> None: ...
     def put_decision(self, decision: dict[str, Any]) -> None: ...
     def put_review(self, item: dict[str, Any]) -> None: ...
+    def update_decision(self, decision_id: str, fields: dict[str, Any]) -> None: ...
+    def list_decisions(self) -> list[dict[str, Any]]: ...
+    def get_review(self, decision_id: str) -> dict[str, Any] | None: ...
+    def update_review(self, decision_id: str, fields: dict[str, Any]) -> None: ...
+    def list_reviews(self, status: str | None = None) -> list[dict[str, Any]]: ...
+    def list_customers(self) -> list[dict[str, Any]]: ...
 
 
 def _with_amount(order: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -107,6 +113,41 @@ class DynamoRepo:
     def put_review(self, item: dict[str, Any]) -> None:
         self._put("review_queue", item)
 
+    def _scan(self, table: str) -> list[dict[str, Any]]:
+        items: list[dict[str, Any]] = []
+        kwargs: dict[str, Any] = {}
+        while True:
+            resp = self._t[table].scan(**kwargs)
+            items.extend(_from_ddb(i) for i in resp.get("Items", []))
+            if "LastEvaluatedKey" not in resp:
+                return items
+            kwargs["ExclusiveStartKey"] = resp["LastEvaluatedKey"]
+
+    def _merge(self, table: str, key: dict[str, str], fields: dict[str, Any]) -> None:
+        current = self._get(table, key)
+        if current is None:
+            raise KeyError(f"{table} {key} not found")
+        self._put(table, current | fields)
+
+    def update_decision(self, decision_id: str, fields: dict[str, Any]) -> None:
+        self._merge("decisions", {"decision_id": decision_id}, fields)
+
+    def list_decisions(self) -> list[dict[str, Any]]:
+        return self._scan("decisions")
+
+    def get_review(self, decision_id: str) -> dict[str, Any] | None:
+        return self._get("review_queue", {"decision_id": decision_id})
+
+    def update_review(self, decision_id: str, fields: dict[str, Any]) -> None:
+        self._merge("review_queue", {"decision_id": decision_id}, fields)
+
+    def list_reviews(self, status: str | None = None) -> list[dict[str, Any]]:
+        items = self._scan("review_queue")
+        return [i for i in items if status is None or i.get("status") == status]
+
+    def list_customers(self) -> list[dict[str, Any]]:
+        return self._scan("customers")
+
 
 class InMemoryRepo:
     """Same interface, backed by dicts. Used by tests and offline development."""
@@ -145,3 +186,30 @@ class InMemoryRepo:
 
     def put_review(self, item: dict[str, Any]) -> None:
         self.review_queue.append(copy.deepcopy(item))
+
+    def _find(self, rows: list[dict[str, Any]], decision_id: str) -> dict[str, Any]:
+        for r in rows:
+            if r["decision_id"] == decision_id:
+                return r
+        raise KeyError(decision_id)
+
+    def update_decision(self, decision_id: str, fields: dict[str, Any]) -> None:
+        self._find(self.decisions, decision_id).update(copy.deepcopy(fields))
+
+    def list_decisions(self) -> list[dict[str, Any]]:
+        return copy.deepcopy(self.decisions)
+
+    def get_review(self, decision_id: str) -> dict[str, Any] | None:
+        try:
+            return copy.deepcopy(self._find(self.review_queue, decision_id))
+        except KeyError:
+            return None
+
+    def update_review(self, decision_id: str, fields: dict[str, Any]) -> None:
+        self._find(self.review_queue, decision_id).update(copy.deepcopy(fields))
+
+    def list_reviews(self, status: str | None = None) -> list[dict[str, Any]]:
+        return [copy.deepcopy(r) for r in self.review_queue if status is None or r.get("status") == status]
+
+    def list_customers(self) -> list[dict[str, Any]]:
+        return [copy.deepcopy(c) for c in self.customers.values()]
