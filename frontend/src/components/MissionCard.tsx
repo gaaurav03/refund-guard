@@ -5,6 +5,7 @@ import type { Persona } from "../types/decision";
 const KIND_STYLE: Record<Mission["kind"], string> = {
   honest: "border-approve/40 text-approve",
   borderline: "border-escalate/40 text-escalate",
+  policy: "border-escalate/40 text-escalate",
   "false claim": "border-deny/40 text-deny",
   "social engineering": "border-deny/40 text-deny",
   "prompt injection": "border-deny/40 text-deny",

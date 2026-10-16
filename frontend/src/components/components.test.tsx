@@ -202,7 +202,7 @@ describe("MissionCard", () => {
     const { MISSIONS } = await import("../lib/missions");
     const { MissionCard } = await import("./MissionCard");
     expect(Object.keys(MISSIONS).sort()).toEqual(
-      ["CUST-007", "CUST-011", "CUST-015", "CUST-020", "CUST-023", "CUST-031", "CUST-040"],
+      ["CUST-007", "CUST-011", "CUST-015", "CUST-020", "CUST-023", "CUST-031", "CUST-040", "CUST-041", "CUST-042", "CUST-043", "CUST-044", "CUST-045", "CUST-046"],
     );
     for (const m of Object.values(MISSIONS)) expect(m.starters.length).toBeGreaterThan(0);
     const persona = {
