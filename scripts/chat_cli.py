@@ -61,10 +61,9 @@ def main() -> None:
         reply = agent(text, invocation_state={"session": session})
         print(f"\nbot ({(time.perf_counter() - t0):.1f}s): {str(reply).strip()}")
         for d in session.decisions[seen:]:
-            probs = {k: round(v, 3) for k, v in (d.get("probs") or {}).items()}
-            keys = ("outcome", "approved_amount", "decided_by", "policy_step", "rule_id",
-                    "args_grounded_p", "manipulation_p", "decision_latency_ms")
-            shown = {k: d[k] for k in keys if d.get(k) is not None} | {"probs": probs}
+            signals = {k: round(v, 3) for k, v in (d.get("signals") or {}).items()}
+            keys = ("outcome", "approved_amount", "decided_by", "policy_step", "rule_id", "decision_latency_ms")
+            shown = {k: d[k] for k in keys if d.get(k) is not None} | {"signals": signals}
             print("  [guard] " + json.dumps(shown))
 
     if args.say:

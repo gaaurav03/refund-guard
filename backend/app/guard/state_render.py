@@ -1,7 +1,8 @@
 """Deterministic rendering of RefundClaimState into Decider's `state` (docs/decision.md section 3).
 
 Structured JSON gave clearly more confident answers than prose in the local smoke test, so we
-send labelled sections as a dict. Customer-written text always goes last and is marked untrusted.
+send labelled sections as a dict. KEY FACTS states what the records show (never a verdict).
+Customer-written text always goes last and is marked untrusted.
 """
 
 from __future__ import annotations
@@ -11,8 +12,42 @@ from typing import Any
 from ..models import RefundClaimState
 
 
+def _claimed_value(s: RefundClaimState) -> float | None:
+    if not s.claimed_skus:
+        return None
+    claimed = set(s.claimed_skus)
+    return round(sum(i.unit_price * i.qty for i in s.items if i.sku in claimed), 2)
+
+
+def key_facts(s: RefundClaimState) -> list[str]:
+    facts: list[str] = []
+    if s.claimed_reason == "not_delivered" and s.delivery_status == "delivered":
+        proof = "with proof of delivery (photo/signature)" if s.proof_of_delivery else "without proof of delivery"
+        facts.append(f"The customer says the order did not arrive, but the delivery record says it was "
+                     f"delivered {proof}.")
+    if s.delivery_status == "lost":
+        facts.append("The courier record says the parcel was lost in transit.")
+    if s.delivery_status in ("not_shipped", "in_transit"):
+        facts.append(f"The order has not been delivered yet (status: {s.delivery_status}).")
+    if not s.claimed_skus:
+        facts.append("The customer has not said which item has a problem.")
+    value = _claimed_value(s)
+    if value is not None and value + 0.01 < s.requested_amount:
+        facts.append(f"The refund requested ({s.requested_amount:g} INR) is more than the price of the items the "
+                     f"problem is about ({value:g} INR).")
+    if s.past_refund_count >= 2:
+        facts.append(f"This customer has had {s.past_refund_count} refunds totalling {s.past_refund_total:g} INR "
+                     "in the last year.")
+    if s.account_age_days < 60:
+        facts.append(f"The customer account is only {s.account_age_days} days old.")
+    if not facts:
+        facts.append("The store records do not contradict the claim.")
+    return facts
+
+
 def render_state(s: RefundClaimState) -> dict[str, Any]:
     return {
+        "KEY FACTS (from store records)": key_facts(s),
         "ORDER": {
             "order_id": s.order_id,
             "items": [i.model_dump() for i in s.items],

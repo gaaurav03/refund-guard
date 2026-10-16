@@ -41,11 +41,12 @@ def system_prompt_for(gullible: bool) -> str:
 
 def thresholds_from(s: Settings) -> Thresholds:
     return Thresholds(
-        approve=s.approve_threshold,
-        deny=s.deny_threshold,
-        partial=s.partial_threshold,
-        manipulation=s.manipulation_threshold,
         args_grounded=s.args_grounded_threshold,
+        contradicted=s.contradicted_threshold,
+        non_evidence=s.non_evidence_threshold,
+        uncertain=s.uncertain_threshold,
+        concrete_problem=s.concrete_problem_threshold,
+        over_ask=s.over_ask_threshold,
     )
 
 

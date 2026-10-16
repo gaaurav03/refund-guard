@@ -87,7 +87,7 @@ class RefundGuard(InterventionHandler):
 
         if decision.outcome in ("approve", "partial"):
             return Proceed()
-        if decision.policy_step == "policy:args_ungrounded":
+        if decision.policy_step == "decider:args_ungrounded":
             return Guide(feedback=decision.agent_feedback)
         return Deny(reason=decision.agent_feedback)
 
@@ -145,10 +145,7 @@ class RefundGuard(InterventionHandler):
             "decided_by": decision.decided_by,
             "policy_step": decision.policy_step,
             "rule_id": decision.rule_id,
-            "probs": dict(d.probs) if d else None,
-            "confidence": d.confidence if d else None,
-            "args_grounded_p": d.args_grounded_p if d else None,
-            "manipulation_p": d.manipulation_p if d else None,
+            "signals": dict(d.signals) if d else None,
             "decider_latency_ms": d.latency_ms if d else None,
             "decision_latency_ms": round(total_ms, 1),
         }

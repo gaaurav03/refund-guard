@@ -19,11 +19,13 @@ class Settings(BaseSettings):
     decider_model: str = "StrandsAgents/strands-decider-2B-qwen3.5-v1-2610"
     decider_timeout_ms: int = 3000
 
-    approve_threshold: float = 0.85
-    deny_threshold: float = 0.85
-    partial_threshold: float = 0.80
-    manipulation_threshold: float = 0.50
+    # decision policy thresholds (docs/decision.md section 5)
     args_grounded_threshold: float = 0.50
+    contradicted_threshold: float = 0.60
+    non_evidence_threshold: float = 0.60
+    uncertain_threshold: float = 0.60
+    concrete_problem_threshold: float = 0.70
+    over_ask_threshold: float = 0.60
     high_value_escalate_inr: float = 10000.0
 
     ddb_table_prefix: str = "rg_"

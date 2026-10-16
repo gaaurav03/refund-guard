@@ -78,13 +78,9 @@ class RefundClaimState(_Strict):
 
 
 class DeciderResult(_Strict):
-    """Normalised answer from /v1/systemone (see decider_client.parse_answers)."""
+    """Normalised answer from /v1/systemone: P(yes) for each evidence question (see guard/questions.py)."""
 
-    option: Outcome
-    probs: dict[Outcome, float]
-    confidence: float
-    args_grounded_p: float | None = None
-    manipulation_p: float | None = None
+    signals: dict[str, float]
     latency_ms: float = 0.0
 
 
