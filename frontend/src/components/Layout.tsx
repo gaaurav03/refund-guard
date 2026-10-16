@@ -33,24 +33,24 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
 export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b border-hairline">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+      <header className="sticky top-0 z-30 border-b border-hairline bg-bg/85 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 border-x border-hairline px-4 py-3.5 sm:px-6">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/favicon.svg" alt="" className="h-6 w-6" />
             <span className="font-serif text-lg">Refund Guard</span>
           </Link>
           <nav className="flex items-center gap-4 sm:gap-6" aria-label="Main">
             <NavLink to="/try" className={navClass}>Try to scam it</NavLink>
-            <NavLink to="/chat" className={`${navClass({ isActive: false })} hidden sm:inline`}>Chat</NavLink>
-            <NavLink to="/review" className={`${navClass({ isActive: false })} hidden sm:inline`}>Review</NavLink>
+            <NavLink to="/chat" className={(s) => `${navClass(s)} hidden sm:inline`}>Chat</NavLink>
+            <NavLink to="/review" className={(s) => `${navClass(s)} hidden sm:inline`}>Review</NavLink>
             <a href={REPO_URL} className="hidden text-sm text-muted hover:text-ink md:inline">GitHub ↗</a>
             <ThemeToggle />
           </nav>
         </div>
       </header>
-      <main className="flex-1">{children}</main>
+      <main className="rails flex-1">{children}</main>
       <footer className="border-t border-hairline">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 border-x border-hairline px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>
             Declared decision pattern: <span className="text-ink">Guardrails</span>
             <span className="mx-2">·</span>

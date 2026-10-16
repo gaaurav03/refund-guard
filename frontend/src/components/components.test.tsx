@@ -99,3 +99,14 @@ describe("api errors", () => {
     expect(friendlyMessage(new ApiError("offline", "x"))).toMatch(/asleep/);
   });
 });
+
+describe("WallOfAttempts", () => {
+  it("shows all held-out cases and filters by category", async () => {
+    const { WallOfAttempts } = await import("./WallOfAttempts");
+    const { fireEvent } = await import("@testing-library/react");
+    render(<WallOfAttempts />);
+    expect(screen.getAllByRole("row")).toHaveLength(1 + 34);
+    fireEvent.click(screen.getByRole("tab", { name: /Prompt injection/ }));
+    expect(screen.getAllByRole("row")).toHaveLength(1 + 6);
+  });
+});

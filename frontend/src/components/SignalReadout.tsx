@@ -3,7 +3,17 @@ import { decidingSignal, fires } from "../lib/decision";
 import type { Meta, Signals } from "../types/decision";
 
 /** Decider's six yes/no answers as an instrument readout: bar, threshold tick, value. */
-export function SignalReadout({ signals, meta, policyStep }: { signals: Signals; meta: Meta; policyStep: string }) {
+export function SignalReadout({
+  signals,
+  meta,
+  policyStep,
+  compact = false,
+}: {
+  signals: Signals;
+  meta: Meta;
+  policyStep: string;
+  compact?: boolean;
+}) {
   const [shown, setShown] = useState(false);
   useEffect(() => {
     const t = window.setTimeout(() => setShown(true), 30); // bars animate from 0 to their value
@@ -12,7 +22,7 @@ export function SignalReadout({ signals, meta, policyStep }: { signals: Signals;
   const deciding = decidingSignal(policyStep);
 
   return (
-    <ul className="space-y-2.5 font-mono text-[12px]" aria-label="Decider signals">
+    <ul className={`${compact ? "space-y-1" : "space-y-2.5"} font-mono text-[12px]`} aria-label="Decider signals">
       {meta.signals.map((s) => {
         const value = signals[s.name] ?? 0;
         const hot = fires(s, value);
@@ -22,7 +32,7 @@ export function SignalReadout({ signals, meta, policyStep }: { signals: Signals;
             key={s.name}
             data-testid={`signal-${s.name}`}
             data-deciding={isDeciding || undefined}
-            className={`rounded-md px-2 py-1.5 transition-colors ${isDeciding ? "bg-accent/10 ring-1 ring-accent/40" : ""}`}
+            className={`rounded-md px-2 ${compact ? "py-1" : "py-1.5"} transition-colors ${isDeciding ? "bg-accent/10 ring-1 ring-accent/40" : ""}`}
           >
             <div className="mb-1 flex items-baseline justify-between gap-3">
               <span className={`truncate ${isDeciding ? "text-ink" : "text-muted"}`} title={s.instructions}>
