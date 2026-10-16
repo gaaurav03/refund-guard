@@ -57,6 +57,7 @@ POLICY_STEP_LABELS = {
     "decider:approve": "Concrete problem, nothing contradicts it",
     "policy:no_items_identified": "No item identified: a human checks",
     "policy:no_concrete_problem": "No concrete problem established: a human checks",
+    "policy:repeated_confirmations": "Repeated attempts after being asked to confirm: a human checks",
 }
 
 PRECHECK_LABELS = {

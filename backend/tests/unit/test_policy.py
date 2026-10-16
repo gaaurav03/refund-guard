@@ -28,7 +28,7 @@ def test_concrete_problem_just_below_threshold_escalates() -> None:
 def test_ungrounded_args_deny_this_call() -> None:
     d = apply_policy(result(args_grounded=0.49), make_state(), T)
     assert (d.outcome, d.policy_step, d.approved_amount) == ("deny", "decider:args_ungrounded", 0.0)
-    assert "Confirm" in d.agent_feedback
+    assert "confirm" in d.agent_feedback.lower() and "NOT PAID" in d.agent_feedback
 
 
 def test_args_at_threshold_continue() -> None:

@@ -183,3 +183,11 @@ def test_args_mismatch_catches_inflated_amounts_and_other_orders():
     assert args_mismatch(["my order ORD-7 is broken"], amount=100, order_id="ORD-1")
     assert args_mismatch(["refund 450 for the mug"], amount=450, order_id="ORD-1") is None
     assert args_mismatch(["the mug is cracked"], amount=1050, order_id="ORD-1") is None  # nothing typed
+
+
+def test_amounts_with_commas_are_read_whole():
+    from claim_vs_evidence import args_mismatch, mentioned
+
+    assert mentioned(["Yes, refund ₹1,200 for ORD-4001"]) == ([1200.0], ["ORD-4001"])
+    assert mentioned(["refund 1,00,000 now"]) == ([100000.0], [])
+    assert args_mismatch(["Yes, refund ₹1,200 for ORD-4001"], amount=1200, order_id="ORD-4001") is None

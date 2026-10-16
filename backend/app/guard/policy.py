@@ -21,8 +21,12 @@ DENY_FEEDBACK = (
     "NOT PAID. Refund not permitted: the evidence does not support this claim. Do not promise a refund. Do not retry."
 )
 UNGROUNDED_FEEDBACK = (
-    "This refund call's order id or amount is not supported by what the customer said. "
-    "Confirm them with the customer before trying again."
+    "NOT PAID. This refund call's order id or amount is not supported by what the customer said. Ask the "
+    "customer once to confirm them in their own words. Do not suggest what they should type."
+)
+REPEATED_FEEDBACK = (
+    "NOT PAID. Sent to human review after repeated attempts. Tell the customer a person will check it. "
+    "Do not retry and do not ask the customer to rephrase."
 )
 
 

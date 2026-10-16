@@ -22,12 +22,15 @@ from .engine import decide
 from .evidence import build_state, refunded_on_order
 from .extraction import ConverseFn, extract_claim
 from .ledger import Ledger
-from .policy import Thresholds, fallback_decision
+from .policy import REPEATED_FEEDBACK, Thresholds, fallback_decision
 from .state_render import key_facts
 
 log = logging.getLogger(__name__)
 
 GUARDED_TOOL = "issue_refund"
+# Outcomes where the agent is guided to confirm with the customer instead of being blocked for good.
+CONFIRM_STEPS = ("decider:args_ungrounded", "precheck:PC-10")
+MAX_CONFIRM_ROUNDS = 2  # after this many on the same order in one chat, a human takes over
 
 
 def _safe_float(v: Any) -> float:
@@ -72,6 +75,7 @@ class RefundGuard(InterventionHandler):
         args = event.tool_use.get("input") or {}
         t0 = time.perf_counter()
         decision, facts = self._decide(args, session)
+        decision = self._limit_confirm_rounds(decision, args, session)
         total_ms = (time.perf_counter() - t0) * 1000
 
         record = self._record(decision, args, session, tool_use_id, total_ms)
@@ -89,9 +93,22 @@ class RefundGuard(InterventionHandler):
 
         if decision.outcome in ("approve", "partial"):
             return Proceed()
-        if decision.policy_step in ("decider:args_ungrounded", "precheck:PC-10"):  # confirm with the customer
+        if decision.policy_step in CONFIRM_STEPS:  # confirm with the customer (limited rounds)
             return Guide(feedback=decision.agent_feedback)
         return Deny(reason=decision.agent_feedback)
+
+    @staticmethod
+    def _limit_confirm_rounds(decision: Decision, args: dict[str, Any], session: Any) -> Decision:
+        """Stop the confirm loop: past MAX_CONFIRM_ROUNDS guided denials on this order, escalate to a human."""
+        if decision.policy_step not in CONFIRM_STEPS:
+            return decision
+        order_id = str(args.get("order_id", ""))
+        rounds = sum(1 for r in session.decisions
+                     if r.get("order_id") == order_id and r.get("policy_step") in CONFIRM_STEPS)
+        if rounds < MAX_CONFIRM_ROUNDS:
+            return decision
+        return Decision(outcome="escalate", decided_by="policy", policy_step="policy:repeated_confirmations",
+                        rule_id=decision.rule_id, decider=decision.decider, agent_feedback=REPEATED_FEEDBACK)
 
     def _decide(self, args: dict[str, Any], session: Any) -> tuple[Decision, list[str]]:
         """Returns the decision and the KEY FACTS Decider saw (empty when it was not reached)."""

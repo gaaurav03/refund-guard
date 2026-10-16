@@ -75,8 +75,9 @@ def run_prechecks(
         return _hit(
             "PC-10",
             "deny",
-            f"NOT PAID. This refund call does not match what the customer asked: {mismatch}. "
-            "Confirm the order and amount with the customer before trying again.",
+            # Deliberately no details: a gullible agent would repeat them and coach the customer.
+            "NOT PAID. This refund call does not match what the customer asked. Ask the customer once to "
+            "confirm the order and amount in their own words. Do not suggest what they should type.",
         )
 
     return None

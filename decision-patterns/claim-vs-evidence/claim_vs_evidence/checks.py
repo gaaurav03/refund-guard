@@ -6,7 +6,7 @@ pre-check in your `gather` function, before Decider is asked anything.
 
 It only fires when the person actually typed numbers or order ids; when they did not ("refund the mug"),
 it stays silent and the Decider questions plus the code cap handle the call. The number extraction is a
-heuristic: it skips numbers followed by units or counts ("250g", "200k followers", "3 days").
+heuristic: it reads "1,200" and "1,00,000", and skips numbers followed by units or counts ("250g", "200k followers").
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from collections.abc import Iterable
 
 ORDER_RE = re.compile(r"\bORD-\d+\b", re.IGNORECASE)
 AMOUNT_RE = re.compile(
-    r"(?<![\w.])(?:₹\s*|rs\.?\s*|inr\s*)?(\d{2,6}(?:\.\d{1,2})?)"
+    r"(?<![\w.,])(?:₹\s*|rs\.?\s*|inr\s*)?(\d{1,3}(?:,\d{2,3})+|\d{2,7})(?:\.\d{1,2})?"
     r"(?!\s*(?:k\b|m\b|g\b|gm\b|ml\b|%|x\b|\d|followers|people|days|years))",
     re.IGNORECASE,
 )
@@ -26,7 +26,8 @@ def mentioned(messages: Iterable[str], *, order_re: re.Pattern[str] = ORDER_RE) 
     """Amounts (>= 10) and order ids the person typed. Order ids are removed before reading amounts."""
     text = " ".join(messages)
     orders = sorted({m.upper() for m in order_re.findall(text)})
-    amounts = sorted({float(a) for a in AMOUNT_RE.findall(order_re.sub(" ", text)) if float(a) >= 10})
+    found = (float(a.replace(",", "")) for a in AMOUNT_RE.findall(order_re.sub(" ", text)))  # "1,200" -> 1200
+    amounts = sorted({a for a in found if a >= 10})
     return amounts, orders
 
 
