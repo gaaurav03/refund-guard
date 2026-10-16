@@ -56,7 +56,7 @@ See [decision.md §9 ADRs](decision.md#9-adrs-key-decisions). Short list:
 | TV-12 | Amazon Nova fallback model/inference-profile ID | architecture §6 | Oct 15 |
 | TV-13 | Bedrock on-demand token prices for the chosen models (cost metric, spend cap) | tests §6, security §4 | Oct 21 |
 | TV-14 | Decider context window (from `/health`) → max state length | decision §3 | Oct 16 |
-| TV-15 | *Partly resolved (see below).* Still open: where the tags are entered (article vs. submission form) and the exact submission form fields | tasks Oct 22–23 | Oct 16 |
+| TV-15 | *Partly resolved.* Confirmed (hackathon About page, 2026-10-16): submission = a **Builder Center post created via "+ Create post" on the hackathon page** (must join first); tags `#strands-decider-2b` + `#guardrails` on the post. Still open: how the post links to the "Your project" tab, and whether the editor has repo/video fields (user checking the editor + Discussion tab). Note: the page says the window opens Oct 16 12:00 AM PDT; the T&C says 9:00 AM PT, so use the later time for anything public | tasks Oct 22–23 | Oct 16 |
 | TV-16 | Strands `BedrockModel` constructor params (`model_id`, region) and how to switch to the fallback model at runtime | FR-01 | Oct 15 |
 | TV-17 | CPU device flag/extra for `strands-decider serve` (`--device cpu`, `[cpu]` extra) | tests §7 | Oct 15 |
 | TV-18 | Whether Decider output is deterministic for identical input (benchmark repeats) | tests §5 | Oct 18 |
