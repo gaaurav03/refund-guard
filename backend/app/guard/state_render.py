@@ -16,7 +16,8 @@ def _claimed_value(s: RefundClaimState) -> float | None:
     if not s.claimed_skus:
         return None
     claimed = set(s.claimed_skus)
-    return round(sum(i.unit_price * i.qty for i in s.items if i.sku in claimed), 2)
+    return round(sum(i.unit_price * min(s.claimed_units.get(i.sku, i.qty), i.qty)
+                     for i in s.items if i.sku in claimed), 2)
 
 
 def key_facts(s: RefundClaimState) -> list[str]:
@@ -74,6 +75,7 @@ def render_state(s: RefundClaimState) -> dict[str, Any]:
         "CLAIM": {
             "claimed_reason": s.claimed_reason,
             "claimed_skus": list(s.claimed_skus),
+            **({"claimed_units": dict(s.claimed_units)} if s.claimed_units else {}),
             "requested_amount": s.requested_amount,
             "return_window_days": s.return_window_days,
             "return_window_status": s.return_window_status,

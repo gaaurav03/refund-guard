@@ -99,3 +99,16 @@ def test_partial_cap_counts_quantity() -> None:
 def test_partial_cap_never_exceeds_request() -> None:
     s = make_state(claimed_skus=["MUG-BLU", "TEA-ASM"], requested_amount=500.0)
     assert partial_cap(s) == 500.0
+
+
+def test_partial_cap_counts_damaged_units_not_the_whole_line() -> None:
+    # "one of the two tea packs is torn": 1 x 300, not the 600 line
+    s = make_state(claimed_skus=["TEA-ASM"], claimed_units={"TEA-ASM": 1}, requested_amount=600.0)
+    assert partial_cap(s) == 300.0
+    d = apply_policy(result(), s, T)
+    assert (d.outcome, d.approved_amount) == ("partial", 300.0)
+
+
+def test_without_units_the_cap_is_the_whole_line_as_before() -> None:
+    s = make_state(claimed_skus=["TEA-ASM"], requested_amount=600.0)
+    assert partial_cap(s) == 600.0

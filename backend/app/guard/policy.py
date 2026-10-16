@@ -22,10 +22,13 @@ UNGROUNDED_FEEDBACK = (
 
 
 def _items_total(state: RefundClaimState) -> float | None:
+    """Value of the affected items: unit price x affected units (claimed_units), else the whole line."""
     if not state.claimed_skus:
         return None
     claimed = set(state.claimed_skus)
-    return sum(i.unit_price * i.qty for i in state.items if i.sku in claimed)
+    return sum(
+        i.unit_price * min(state.claimed_units.get(i.sku, i.qty), i.qty) for i in state.items if i.sku in claimed
+    )
 
 
 def partial_cap(state: RefundClaimState) -> float | None:

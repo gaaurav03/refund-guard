@@ -57,6 +57,8 @@ class RefundClaimState(_Strict):
     past_refund_total: float = Field(ge=0)
     claimed_reason: ClaimedReason
     claimed_skus: list[str] = Field(default_factory=list)
+    # SKU -> how many units have the problem ("one of the two packs" -> 1). Empty = the whole line.
+    claimed_units: dict[str, int] = Field(default_factory=dict)
     customer_quotes: list[str] = Field(default_factory=list, max_length=MAX_QUOTES)
     requested_amount: float
     tool_reason: str = ""

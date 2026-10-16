@@ -65,6 +65,7 @@ def build_state(
         past_refund_total=total,
         claimed_reason=claim.claimed_reason,
         claimed_skus=claim.claimed_skus,
+        claimed_units=claim.claimed_units,
         customer_quotes=claim.customer_quotes,
         requested_amount=float(args["amount"]),
         tool_reason=str(args.get("reason", ""))[:300],
