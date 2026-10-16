@@ -1,0 +1,27 @@
+[project]
+name = "refund-guard"
+version = "0.1.0"
+description = "The support agent you can't scam: Strands Decider 2B guards issue_refund before it runs."
+requires-python = ">=3.11"
+license = "Apache-2.0"
+
+[tool.pytest.ini_options]
+pythonpath = ["backend"]
+testpaths = ["backend/tests"]
+asyncio_mode = "auto"
+markers = [
+    "live: needs a running Decider server and/or AWS credentials",
+]
+addopts = "-m 'not live'"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["backend/app/guard", "backend/app/models.py"]

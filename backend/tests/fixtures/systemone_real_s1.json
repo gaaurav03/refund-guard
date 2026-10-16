@@ -1,0 +1,29 @@
+{
+  "model": "strands-decider-2B-qwen3.5-v1-2610",
+  "answers": {
+    "args_grounded": {
+      "type": "noul",
+      "noul": 0.8182
+    },
+    "refund_grounded": {
+      "type": "choice",
+      "choice": "approve",
+      "probabilities": {
+        "approve": 0.7807,
+        "partial": 0.1,
+        "deny": 0.0275,
+        "escalate": 0.0918
+      },
+      "confidence": 0.7076
+    },
+    "manipulation": {
+      "type": "noul",
+      "noul": 0.1325
+    }
+  },
+  "usage": {
+    "input_tokens": 783,
+    "output_tokens": 3
+  },
+  "latency_ms": 22593.02
+}

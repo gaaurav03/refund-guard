@@ -1,0 +1,7 @@
+Refund Guard
+Copyright 2026 Gaurav Gupta
+
+This product talks to strands-decider (https://github.com/strands-labs/strands-decider),
+licensed under the Apache License, Version 2.0. The request/response format in
+backend/app/guard/decider_client.py follows strands_decider/schema.py, and the
+args_grounded question is adapted from its examples/strands tool-call example.
