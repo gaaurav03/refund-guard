@@ -8,17 +8,22 @@ An AI customer-support agent for a small online store. It runs on Amazon Bedrock
 
 ## The decision
 
-Before `issue_refund(order_id, amount, reason)` runs, Decider 2B answers:
+Before `issue_refund(order_id, amount, reason)` runs, Decider 2B answers six typed yes/no evidence questions in one call:
 
-1. **`args_grounded`** (yes/no): are the tool's arguments grounded in what the customer actually said?
-2. **`refund_grounded`** (choice): is the refund request grounded in the evidence (order, delivery, refund history, the customer's statements)? Options: `approve | partial | deny | escalate`.
-3. **`manipulation`** (yes/no): is someone trying to manipulate the agent?
+| Signal | Question |
+|---|---|
+| `args_grounded` | Are the tool's arguments grounded in what the customer actually said? |
+| `contradicted` | Do the store's records contradict the claim? |
+| `concrete_problem` | Does the customer describe a specific, concrete problem? |
+| `non_evidence` | Is the customer relying on authority, threats or instructions instead of evidence? |
+| `over_ask` | Is the amount larger than the value of the affected items? |
+| `uncertain` | Is the customer unsure, or is it a matter of taste? |
 
-A confidence policy turns the probabilities into an action. Anything uncertain goes to a human review queue, and every error fails closed. Full spec: [docs/decision.md](docs/decision.md).
+Plain code combines the answers into exactly one of `approve | partial | deny | escalate` and computes the amount. Anything uncertain goes to a human review queue, and every error fails closed. On our dev set, splitting one big question into these six raised accuracy from 75% to 94% and cut escalations from 88% to 25%. Full spec: [docs/decision.md](docs/decision.md).
 
-## Typed question and options
+## Typed questions and options
 
-See [docs/decision.md §2](docs/decision.md#2-typed-question-and-options) and [`backend/app/guard/questions.py`](backend/app/guard/questions.py).
+See [docs/decision.md §2](docs/decision.md#2-typed-questions-and-options) and [`backend/app/guard/questions.py`](backend/app/guard/questions.py).
 
 ## Measured results
 

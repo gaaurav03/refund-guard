@@ -43,7 +43,7 @@
 - [ ] **Milestone:** S1, S2 and S4 work from the terminal/curl
 
 ## Oct 19 (Sun) — Confidence policy + review queue
-- [x] `policy.py` (thresholds, manipulation downgrade, `partial_cap`) + unit tests (pulled forward to Oct 16)
+- [x] `policy.py` + unit tests (pulled forward to Oct 16); redesigned on Oct 16 to six Decider signals (ADR-15)
 - [ ] `rg_decisions` logging, `rg_review_queue`, `/api/review` endpoints + reviewer token
 - [ ] Bedrock reply-writing per outcome; fallback model switch (IT-05)
 - [ ] E2E tests S1–S6 pass locally
@@ -89,7 +89,7 @@
 
 | # | Cut | Saves |
 |---|---|---|
-| 1 | `manipulation` question | 2 h |
+| 1 | Weakest Decider signal (`non_evidence`) if it adds nothing | 1 h |
 | 2 | Scoreboard recent feed (keep counters) | 2 h |
 | 3 | Review queue notes and editable amount | 1.5 h |
 | 4 | Benchmark repeats (1× each arm), E2E-extraction variant, calibration table | 2.5 h |

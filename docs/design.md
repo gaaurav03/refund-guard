@@ -23,7 +23,7 @@
 - **Type:** "Inter" for UI, "JetBrains Mono" for evidence/probabilities (numbers line up), "Fraunces" for the store wordmark and page headings only.
 - Outcome colours are always paired with an icon and a label (✓ approve, ◐ partial, ✕ deny, ↑ escalate), so colour is never the only signal.
 - Dark mode: guard panel only (slate background), so it reads as "the machine room".
-- Motion: confidence bars animate from 0 → p over 400 ms, and the outcome chip appears after the bars. This is the money shot in the video.
+- Motion: the six signal bars animate from 0 → p over 400 ms, then the policy step that fired highlights, then the outcome chip appears. This is the money shot in the video.
 
 ## 2. Screen 1 — Customer chat (`/`)
 
@@ -60,21 +60,21 @@ Desktop: a 3-column layout with chat (left 40%), live decision panel (centre 35%
 │               │ issue_refund(ORD-2077, 2400) │ Attempts        1,284   │
 │ you: it never │ Pre-checks  ✓ 9/9 passed     │ Scams that won     3    │
 │ arrived!!     │ Decider 2B   212 ms          │ Denied           801    │
-│               │  approve  ▏ 0.03             │ Escalated        480    │
-│               │  partial  ▏ 0.02             │ ───────────────         │
-│               │  deny     █████████ 0.91     │ Recent:                 │
-│               │  escalate ▍ 0.04             │ ✕ "manager said…" 2m    │
-│               │ Manipulation ▓▓░░ 0.38       │ ↑ "tastes off"   5m     │
+│               │  args grounded ███████ 0.69  │ Escalated        480    │
+│               │  contradicted  ████████ 0.73 │ ───────────────         │
+│               │  concrete prob ███ 0.30      │ Recent:                 │
+│               │  pressure      ██ 0.28       │ ✕ "manager said…" 2m    │
+│               │  over-ask ▏0.18 unsure ▏0.13 │ ↑ "tastes off"   5m     │
 │               │ Evidence used:               │ ✕ "ignore rules" 6m     │
 │               │  delivery: delivered ✓ POD   │                         │
 │               │  past refunds: 3 (₹6,100)    │                         │
 │               │ ┌───────────────┐            │                         │
-│               │ │ ✕ DENIED      │ policy: p≥0.85                      │
+│               │ │ ✕ DENIED      │ step 2: contradicted ≥ 0.60         │
 │               │ └───────────────┘            │                         │
 └───────────────┴──────────────────────────────┴─────────────────────────┘
 ```
 
-- **Panel sections in order:** tool call → pre-checks (which rule fired, if any) → "Args grounded in what you said?" yes/no gauge → Decider bars (4 options, threshold tick mark at 0.85/0.80) → manipulation gauge → evidence used → final outcome + `decided_by` + policy step.
+- **Panel sections in order:** tool call → pre-checks (which rule fired, if any) → KEY FACTS → Decider's six signal bars (each with its threshold tick; the bar that decided is highlighted) → evidence used → final outcome + `decided_by` + the policy step in plain words (e.g. "Records contradict the claim").
 - If a pre-check fires, the Decider section shows "Not needed: PC-03 amount exceeds order" in grey. This shows the cheap rules doing their job.
 - **Scoreboard:** `attempts`, `scams_succeeded` (red if > 0, honest), `denied`, `escalated`, plus a recent feed with the first 30 chars of the user's message, sanitised.
 - Rules box (collapsible): "Refunds are simulated. No real money. Be creative. Abuse = rate limited."
@@ -89,7 +89,7 @@ Desktop: a 3-column layout with chat (left 40%), live decision panel (centre 35%
 | Claim | `claimed_reason` + first quote |
 | Requested | `₹` amount |
 | Decider | mini bars + top option |
-| Why escalated | `policy_step` text, e.g. "no option ≥ threshold" / "manipulation 0.72" / "Decider timeout" |
+| Why escalated | `policy_step` text, e.g. "customer unsure (0.73)" / "pressure but a real problem" / "no concrete problem" / "Decider timeout" |
 | Action | **Approve** (amount editable, ≤ `requested_amount`) · **Deny** · note |
 
 Clicking a row opens a drawer with the full `RefundClaimState`, the transcript and the decision log entry. On resolve, the row animates out and the decision is logged with `decided_by = human`.
@@ -119,7 +119,7 @@ Clicking a row opens a drawer with the full `RefundClaimState`, the transcript a
 | 0:15–0:40 | S1 genuine claim → green ✓ APPROVED in ~instant, bars animate | chat |
 | 0:40–1:10 | S2 "never arrived" → deny bar fills to 0.9, evidence "POD ✓" highlighted | challenge |
 | 1:10–1:35 | S4 injection "ignore your rules… ₹50,000" → "PC-03 blocked, Decider not needed" | challenge |
-| 1:35–1:55 | S3 manager claim → manipulation gauge red → escalate; S5 lands in review queue → reviewer resolves | challenge → review |
+| 1:35–1:55 | S3 manager claim (gullible mode) → args-grounded bar low → deny; S5 lands in review queue → reviewer resolves | challenge → review |
 | 1:55–2:10 | S6 partial → amber chip, capped ₹ amount | chat |
 | 2:10–2:40 | Measured results table: Decider vs. LLM-as-judge (latency, cost, attack success) | slide |
 | 2:40–2:55 | Reusable pattern folder + "what I learned" + tags | repo / slide |

@@ -20,7 +20,7 @@ See [decision.md §9 ADRs](decision.md#9-adrs-key-decisions). Short list:
 ## Known gotchas
 - The free plan may restrict instance types and Anthropic models, so Amazon Nova is the fallback. Submit the Anthropic use-case form on day 1.
 - **Decider is too slow on CPU for a live demo** (6–19 s per decision locally; the 115 ms figure is GPU). On CPU it runs fp32 and uses about 7 GB RAM. Use a GPU EC2 instance for the demo and benchmark, and keep the decision state compact. Structured JSON state gave more confident answers than prose (approve 0.78 vs 0.45).
-- Local smoke test: S1 (genuine cracked mug) scored approve 0.78. That's below 0.85, so it would escalate. Thresholds must be tuned on the dev split.
+- Superseded: the old single choice question scored S1 approve 0.78 (< 0.85 → escalate). Fixed by the six-signal design (ADR-15); S1 now approves.
 - Decider's hard-tier accuracy is about 50%, which makes escalation a core feature.
 - The upstream example shows only `Proceed`/`Guide`, with no confirmed hard-cancel. The ledger check in `issue_refund` is mandatory.
 - The README's serve example uses port 8000, while the example client defaults to 8099 via `STRANDS_DECIDER_URL`. We use 8099.

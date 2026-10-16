@@ -107,7 +107,7 @@ sequenceDiagram
 | `rg_orders` | `order_id` | — | `customer_id`, `items`, `order_amount`, `currency`, `order_date`, `truth_refundable_amount` (hidden, challenge scoring only) |
 | `rg_deliveries` | `order_id` | — | `delivery_status`, `delivered_at`, `proof_of_delivery` |
 | `rg_refunds` | `customer_id` | `refund_id` | `order_id`, `amount`, `created_at` |
-| `rg_decisions` | `decision_id` | — | `session_id`, `source (chat\|challenge\|bench)`, `state_hash`, `probs`, `manipulation_p`, `outcome`, `approved_amount`, `decided_by`, `policy_step`, `latency_ms`, `is_scam_success`, `created_at` |
+| `rg_decisions` | `decision_id` | — | `session_id`, `source (chat\|challenge\|bench)`, `state_hash`, `signals` (6 Decider P(yes) values), `gullible`, `outcome`, `approved_amount`, `decided_by`, `policy_step`, `latency_ms`, `is_scam_success`, `created_at` |
 | `rg_review_queue` | `decision_id` | — | `status (pending\|approved\|denied)`, `reviewer_note`, `resolved_at` |
 | `rg_sessions` | `session_id` | — | `ip_hash`, `message_count`, `recent_customer_messages` (raw user turns), `created_at`, `ttl` |
 
@@ -145,9 +145,8 @@ sequenceDiagram
 | `STRANDS_DECIDER_URL` | `http://127.0.0.1:8099` | Same var as the upstream example |
 | `DECIDER_MODEL` | `StrandsAgents/strands-decider-2B-qwen3.5-v1-2610` | TODO-VERIFY (TV-01) |
 | `DECIDER_TIMEOUT_MS` | `3000` | then fail closed |
-| `APPROVE_THRESHOLD` / `DENY_THRESHOLD` / `PARTIAL_THRESHOLD` | `0.85` / `0.85` / `0.80` | decision.md §5 |
-| `MANIPULATION_THRESHOLD` | `0.50` | |
-| `ARGS_GROUNDED_THRESHOLD` | `0.50` | decision.md §5 step 1b |
+| `ARGS_GROUNDED_THRESHOLD` / `CONTRADICTED_THRESHOLD` / `NON_EVIDENCE_THRESHOLD` | `0.50` / `0.60` / `0.60` | decision.md §5 |
+| `UNCERTAIN_THRESHOLD` / `CONCRETE_PROBLEM_THRESHOLD` / `OVER_ASK_THRESHOLD` | `0.60` / `0.70` / `0.60` | decision.md §5 |
 | `HIGH_VALUE_ESCALATE_INR` | `10000` | `PC-08` |
 | `DDB_TABLE_PREFIX` | `rg_` | |
 | `RATE_LIMIT_PER_MIN_IP` / `MAX_MESSAGES_PER_SESSION` / `MAX_SESSIONS_PER_IP_DAY` | `30` / `20` / `10` | security.md |
