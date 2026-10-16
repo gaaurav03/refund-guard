@@ -35,11 +35,14 @@ export function SignalReadout({
             className={`rounded-md px-2 ${compact ? "py-1" : "py-1.5"} transition-colors ${isDeciding ? "bg-accent/10 ring-1 ring-accent/40" : ""}`}
           >
             <div className="mb-1 flex items-baseline justify-between gap-3">
-              <span className={`truncate ${isDeciding ? "text-ink" : "text-muted"}`} title={s.instructions}>
+              <span
+                className={`min-w-0 ${compact ? "truncate" : "leading-snug"} ${isDeciding ? "text-ink" : "text-muted"}`}
+                title={s.instructions}
+              >
                 {isDeciding && <span className="mr-1 text-accent" aria-hidden>▸</span>}
                 {s.label}
               </span>
-              <span className={`tabular-nums ${hot ? "text-accent" : "text-muted"}`}>{value.toFixed(2)}</span>
+              <span className={`shrink-0 tabular-nums ${hot ? "text-accent" : "text-muted"}`}>{value.toFixed(2)}</span>
             </div>
             <div className="relative h-1.5 rounded-full bg-hairline">
               <div

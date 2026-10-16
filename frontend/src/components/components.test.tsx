@@ -58,7 +58,7 @@ describe("DecisionPanel", () => {
     render(<DecisionPanel d={DECISION} meta={META} />);
     expect(screen.getByText(/delivery record says/)).toBeInTheDocument();
     expect(screen.getByText("Store records contradict the claim")).toBeInTheDocument();
-    expect(screen.getByText(/9\/9 passed/)).toBeInTheDocument();
+    expect(screen.getByText(/1\/1 passed/)).toBeInTheDocument(); // count comes from meta.rules
   });
 
   it("says Decider was not needed when a pre-check fired", () => {

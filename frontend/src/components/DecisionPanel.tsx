@@ -18,7 +18,9 @@ export function DecisionPanel({ d, meta }: { d: Decision; meta: Meta | null }) {
           {d.decided_by === "precheck" ? (
             <span className="text-deny">✕ {d.rule_id} fired</span>
           ) : (
-            <span className="text-approve">✓ 9/9 passed</span>
+            <span className="text-approve">
+              ✓ {meta ? `${Object.keys(meta.rules).length}/${Object.keys(meta.rules).length}` : "all"} passed
+            </span>
           )}
         </p>
       </div>
