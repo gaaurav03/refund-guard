@@ -141,3 +141,22 @@ describe("Markdown", () => {
     expect(container.querySelector("img")).toBeNull();
   });
 });
+
+describe("Review sign-in", () => {
+  it("forgets a rejected token and shows the sign-in form again", async () => {
+    const { MemoryRouter } = await import("react-router-dom");
+    const { Review } = await import("../pages/Review");
+    sessionStorage.setItem("rg-reviewer-token", "wrong");
+    const orig = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ detail: "Invalid reviewer token." }), { status: 401 })) as typeof fetch;
+    try {
+      render(<MemoryRouter><Review /></MemoryRouter>);
+      expect(await screen.findByText(/That token didn't work/)).toBeTruthy();
+      expect(sessionStorage.getItem("rg-reviewer-token")).toBeNull();
+    } finally {
+      globalThis.fetch = orig;
+      sessionStorage.clear();
+    }
+  });
+});

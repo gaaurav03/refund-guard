@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { api, friendlyMessage } from "../api/client";
+import { ApiError, api, friendlyMessage } from "../api/client";
 import { DecisionPanel } from "../components/DecisionPanel";
 import { inr } from "../lib/decision";
 import { useMeta } from "../lib/hooks";
 import type { Decision } from "../types/decision";
 
 const TOKEN_KEY = "rg-reviewer-token";
+
+function storeToken(t: string | null) {
+  try {
+    if (t) sessionStorage.setItem(TOKEN_KEY, t);
+    else sessionStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* session storage unavailable; token kept in memory only */
+  }
+}
 
 function readToken(): string {
   try {
@@ -25,6 +34,26 @@ export function Review() {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [rejected, setRejected] = useState(false);
+
+  // A wrong token must never get stuck: forget it and show the sign-in form again.
+  const signOut = useCallback((wasRejected = false) => {
+    storeToken(null);
+    setToken("");
+    setDraft("");
+    setItems(null);
+    setOpen(null);
+    setError(null);
+    setRejected(wasRejected);
+  }, []);
+
+  const handle = useCallback(
+    (e: unknown) => {
+      if (e instanceof ApiError && e.kind === "unauthorized") signOut(true);
+      else setError(friendlyMessage(e));
+    },
+    [signOut],
+  );
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -32,10 +61,10 @@ export function Review() {
       setItems(await api.reviews(token));
       setError(null);
     } catch (e) {
-      setError(friendlyMessage(e));
       setItems(null);
+      handle(e);
     }
-  }, [token]);
+  }, [token, handle]);
 
   useEffect(() => {
     void load();
@@ -43,12 +72,11 @@ export function Review() {
 
   const signIn = (e: FormEvent) => {
     e.preventDefault();
-    try {
-      sessionStorage.setItem(TOKEN_KEY, draft);
-    } catch {
-      /* session-only storage unavailable; token kept in memory */
-    }
-    setToken(draft);
+    const t = draft.trim();
+    if (!t) return;
+    storeToken(t);
+    setRejected(false);
+    setToken(t);
   };
 
   const resolve = async (action: "approve" | "deny") => {
@@ -60,7 +88,7 @@ export function Review() {
       setNote("");
       await load();
     } catch (e) {
-      setError(friendlyMessage(e));
+      handle(e);
     } finally {
       setBusy(false);
     }
@@ -72,6 +100,11 @@ export function Review() {
         <p className="label mb-3">store owner</p>
         <h1 className="mb-6 text-4xl">Review queue</h1>
         <form onSubmit={signIn} className="card space-y-3 p-5">
+          {rejected && (
+            <p role="alert" className="rounded-[10px] border border-deny/40 bg-deny/10 p-3 text-sm">
+              That token didn't work. Please try again.
+            </p>
+          )}
           <label htmlFor="token" className="text-sm text-muted">Reviewer token</label>
           <input
             id="token"
@@ -80,7 +113,11 @@ export function Review() {
             onChange={(e) => setDraft(e.target.value)}
             className="min-h-[44px] w-full rounded-[10px] border border-hairline bg-bg px-3"
           />
-          <button className="btn-primary w-full" type="submit" disabled={!draft}>Open queue</button>
+          <button className="btn-primary w-full" type="submit" disabled={!draft.trim()}>Open queue</button>
+          <p className="font-mono text-[11px] leading-relaxed text-muted">
+            Store-owner only. The token is the <span className="text-ink">REVIEWER_TOKEN</span> value in the server's{" "}
+            <span className="text-ink">.env</span> file. Kept only until you close this tab.
+          </p>
         </form>
       </div>
     );
@@ -89,7 +126,12 @@ export function Review() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <p className="label mb-3">store owner</p>
-      <h1 className="text-4xl">Review queue</h1>
+      <div className="flex items-end justify-between gap-4">
+        <h1 className="text-4xl">Review queue</h1>
+        <button type="button" onClick={() => signOut()} className="font-mono text-[12px] text-muted hover:text-ink">
+          sign out
+        </button>
+      </div>
       <p className="mt-3 max-w-prose text-muted">
         Refunds Refund Guard wasn't sure about. Nothing here has been paid. You decide.
       </p>
