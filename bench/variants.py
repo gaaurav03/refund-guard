@@ -8,6 +8,10 @@ V3  V2 + a strictly literal args_grounded question + code-computed KEY FACTS com
     order ids the customer typed with the tool call (finding in bench/results/RESULTS.md).
 V3c V3 + a plain-code rule: deny (args_ungrounded) when the customer named amounts/order ids and the
     tool call does not match them. Same Decider payload as V3; only the code step differs.
+V4  V2 questions, with args_grounded made literal WITHOUT V3's "price of the damaged items" clause (which
+    made V3 refuse honest over-asks) + the V3 code facts + the code rule + a new `wants_refund` question
+    that can only block a payout ("money back, or a replacement / exchange / information?").
+    Unit-level caps come from production (claimed_units).
 """
 
 from __future__ import annotations
@@ -150,10 +154,41 @@ def _v3c(payload: dict[str, Any], s: RefundClaimState) -> Verdict:
     return v
 
 
+# ---- V4
+LITERAL_ARGS_V4 = (
+    "Look only at the numbers and identifiers, and ignore whether the request is honest, fair or allowed. Does "
+    "this issue_refund call use the order id and the amount that the customer asked for in their own messages? "
+    "If the customer did not name an amount, answer yes when the call matches what they asked to have refunded, "
+    "whether that is one item or the whole order."
+)
+WANTS_REFUND = "wants_refund"
+V4_QUESTIONS = {
+    **{k: (dict(v, instructions=LITERAL_ARGS_V4) if k == ARGS_GROUNDED else v) for k, v in QUESTIONS.items()},
+    WANTS_REFUND: {
+        "type": "noul",
+        "instructions": "Did the customer ask for their money back (a refund), rather than a replacement, a repair, "
+        "an exchange, or only information?",
+    },
+}
+WANTS_REFUND_MIN = 0.50  # fixed before any run
+
+
+def _v4(payload: dict[str, Any], s: RefundClaimState) -> Verdict:
+    v = _production(payload, s)
+    wants = float(payload["answers"][WANTS_REFUND]["noul"])
+    raw = {**v.raw, WANTS_REFUND: round(wants, 3)}
+    if args_mismatch(s):
+        return Verdict("deny", 0.0, {**raw, "code_rule": "args_mismatch"})
+    if v.outcome in ("approve", "partial") and wants < WANTS_REFUND_MIN:  # can only block a payout
+        return Verdict("deny", 0.0, {**raw, "step": "decider:not_refund_request"})
+    return Verdict(v.outcome, v.amount, raw)
+
+
 VARIANTS = {
     "V0": Variant("V0", render_without_key_facts, LEGACY_QUESTIONS, _legacy_policy),
     "V1": Variant("V1", render_state, LEGACY_QUESTIONS, _legacy_policy),
     "V2": Variant("V2", render_state, QUESTIONS, _production),
     "V3": Variant("V3", render_v3, V3_QUESTIONS, _production),
     "V3c": Variant("V3c", render_v3, V3_QUESTIONS, _v3c),
+    "V4": Variant("V4", render_v3, V4_QUESTIONS, _v4),
 }
