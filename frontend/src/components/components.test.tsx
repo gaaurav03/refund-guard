@@ -196,3 +196,23 @@ describe("useConversation persistence", () => {
     sessionStorage.clear();
   });
 });
+
+describe("MissionCard", () => {
+  it("has a mission for every demo customer and renders the briefing", async () => {
+    const { MISSIONS } = await import("../lib/missions");
+    const { MissionCard } = await import("./MissionCard");
+    expect(Object.keys(MISSIONS).sort()).toEqual(
+      ["CUST-007", "CUST-011", "CUST-015", "CUST-020", "CUST-023", "CUST-031", "CUST-040"],
+    );
+    for (const m of Object.values(MISSIONS)) expect(m.starters.length).toBeGreaterThan(0);
+    const persona = {
+      customer_id: "CUST-011", name: "Ravi", label: "", orders: [
+        { order_id: "ORD-2077", order_date: "2026-10-03", order_amount: 2400,
+          items: [{ name: "Festive tea gift hamper", qty: 1, unit_price: 2400 }] },
+      ],
+    };
+    render(<MissionCard persona={persona} mission={MISSIONS["CUST-011"]!} />);
+    expect(screen.getByText(/What really happened/)).toBeTruthy();
+    expect(screen.getByText(/Only you see this card/)).toBeTruthy();
+  });
+});
