@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens (docs/design.md section 1). RGB triplets so Tailwind can apply opacity. */
+:root {
+  --bg: 245 241 232;        /* #F5F1E8 cream */
+  --surface: 251 249 244;   /* #FBF9F4 */
+  --ink: 31 30 29;          /* #1F1E1D */
+  --muted: 107 102 92;      /* #6B665C */
+  --hairline: 227 220 205;  /* #E3DCCD */
+  --accent: 201 100 66;     /* #C96442 clay */
+  --approve: 63 125 88;     /* #3F7D58 */
+  --partial: 183 134 43;    /* #B7862B */
+  --deny: 180 67 47;        /* #B4432F */
+  --escalate: 74 99 168;    /* #4A63A8 */
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: 29 28 26;           /* #1D1C1A */
+  --surface: 38 37 34;      /* #262522 */
+  --ink: 236 232 223;       /* #ECE8DF */
+  --muted: 163 158 147;     /* #A39E93 */
+  --hairline: 58 56 51;     /* #3A3833 */
+  --accent: 217 119 87;     /* #D97757 */
+  --approve: 110 175 133;
+  --partial: 214 170 84;
+  --deny: 222 116 96;
+  --escalate: 132 154 222;
+  color-scheme: dark;
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  h1, h2, h3 { @apply font-serif font-normal tracking-tight; }
+  ::selection { background: rgb(var(--accent) / 0.22); }
+  :focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; border-radius: 6px; }
+}
+
+@layer components {
+  .card { @apply bg-surface border border-hairline rounded-card; }
+  .label { @apply font-mono text-[11px] uppercase tracking-[0.14em] text-muted; }
+  .rule { border-top: 1px dashed rgb(var(--hairline)); }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-medium transition-colors min-h-[44px]; }
+  .btn-primary { @apply btn bg-accent text-white hover:bg-accent/90; }
+  .btn-ghost { @apply btn border border-hairline text-ink hover:bg-surface; }
+  .link { @apply underline decoration-hairline underline-offset-4 hover:decoration-accent; }
+}
+
+.cursor::after {
+  content: "▍";
+  margin-left: 2px;
+  color: rgb(var(--accent));
+  animation: blink 1.1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.bar-fill { transition: width 400ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor::after { animation: none; }
+  .bar-fill { transition: none; }
+}

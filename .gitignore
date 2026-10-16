@@ -18,3 +18,4 @@ dist/
 # Local artefacts
 scripts/out/
 *.log
+*.tsbuildinfo

@@ -9,6 +9,8 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from fastapi import HTTPException
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .agent.bedrock import make_converse
@@ -44,4 +46,14 @@ app = create_app(settings=settings, repo=repo, agent_factory=agent_factory, deci
 
 DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 if DIST.is_dir():
-    app.mount("/", StaticFiles(directory=DIST, html=True), name="frontend")
+    app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str) -> FileResponse:
+        """Serve real files from dist; every other non-API route gets index.html (client-side routing)."""
+        if path.startswith("api/"):
+            raise HTTPException(404)
+        file = (DIST / path).resolve()
+        if path and file.is_file() and DIST.resolve() in file.parents:
+            return FileResponse(file)
+        return FileResponse(DIST / "index.html")
