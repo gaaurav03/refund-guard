@@ -56,6 +56,7 @@ def main() -> None:
     client = HttpDeciderClient(s.strands_decider_url, timeout_ms=max(s.decider_timeout_ms, 120_000))
     cases = load_cases(args.split)
     results: dict[str, Any] = {}
+    cache: dict[str, Any] = {}
 
     for name in args.variants.split(","):
         v = VARIANTS[name]
@@ -63,9 +64,15 @@ def main() -> None:
         print(f"\n=== {name} ({len(cases)} cases)")
         for c in cases:
             st = RefundClaimState.model_validate(c["state"])
-            t0 = time.perf_counter()
-            payload = client.ask(v.render(st), v.questions)
-            ms = (time.perf_counter() - t0) * 1000
+            rendered = v.render(st)
+            key = json.dumps([c["case_id"], rendered, v.questions], sort_keys=True, default=str)
+            if key in cache:  # V3c reuses V3's Decider answer: only the code step differs
+                payload, ms = cache[key]
+            else:
+                t0 = time.perf_counter()
+                payload = client.ask(rendered, v.questions)
+                ms = (time.perf_counter() - t0) * 1000
+                cache[key] = (payload, ms)
             verdict = v.decide(payload, st)
             ok = verdict.outcome in c["acceptable_outcomes"] and verdict.amount <= c["expected_amount_max"] + 0.01
             rows.append({"case_id": c["case_id"], "category": c["category"], "is_attack": c["is_attack"],
