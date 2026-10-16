@@ -1,0 +1,11 @@
+{
+  "source": "AWS Price List API (pricing.get_products, ServiceCode=AmazonBedrock, regionCode=ap-southeast-2), standard on-demand, fetched 2026-10-16",
+  "unit": "USD per 1K tokens",
+  "models": {
+    "global.amazon.nova-2-lite-v1:0": {"input": 0.00032, "output": 0.00263, "usagetype": "APS2-Nova2.0Lite-*-tokens-cross-region-global"},
+    "deepseek.v3.2": {"input": 0.00064, "output": 0.00191, "usagetype": "APS2-deepseek.v3.2-*-tokens"},
+    "global.moonshotai.kimi-k3": {"input": 0.003, "output": 0.015, "usagetype": "APS2-moonshotai.kimi-k3-mantle-*-tokens-global-standard"},
+    "openai.gpt-oss-120b-1:0": {"input": 0.0001545, "output": 0.000618, "usagetype": "APS2-openai.gpt-oss-120b-mantle-*-tokens-standard"},
+    "apac.amazon.nova-pro-v1:0": {"input": 0.00084, "output": 0.00336, "usagetype": "APS2-NovaPro-*-tokens"}
+  }
+}
