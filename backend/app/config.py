@@ -17,7 +17,8 @@ class Settings(BaseSettings):
 
     strands_decider_url: str = "http://127.0.0.1:8099"
     decider_model: str = "StrandsAgents/strands-decider-2B-qwen3.5-v1-2610"
-    decider_timeout_ms: int = 3000
+    # Free-plan CPU host (m7i-flex.large) takes ~27-31 s per decision; past this the guard fails closed to a human
+    decider_timeout_ms: int = 90_000
 
     # decision policy thresholds (docs/decision.md section 5)
     args_grounded_threshold: float = 0.50

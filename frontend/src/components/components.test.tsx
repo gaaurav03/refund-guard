@@ -160,3 +160,36 @@ describe("Review sign-in", () => {
     }
   });
 });
+
+describe("useConversation persistence", () => {
+  it("restores the same customer's chat after a refresh, and 'new chat' / another customer start fresh", async () => {
+    const { renderHook, act } = await import("@testing-library/react");
+    const { useConversation, savedSelection } = await import("../lib/useConversation");
+    sessionStorage.setItem(
+      "rg-convo:challenge",
+      JSON.stringify({
+        key: "CUST-011|true",
+        messages: [{ role: "user", text: "never arrived" }],
+        latest: null,
+        left: 18,
+        blocked: null,
+        session: { session_id: "S-1" },
+      }),
+    );
+    expect(savedSelection("challenge")).toEqual({ customerId: "CUST-011", gullible: true });
+
+    const { result } = renderHook(() => useConversation("challenge"));
+    act(() => result.current.reset("CUST-011", true));
+    expect(result.current.messages).toHaveLength(1);
+    expect(result.current.left).toBe(18);
+
+    act(() => result.current.reset("CUST-011", true, true)); // ↺ new chat
+    expect(result.current.messages).toHaveLength(0);
+    expect(sessionStorage.getItem("rg-convo:challenge")).toBeNull();
+
+    sessionStorage.setItem("rg-convo:challenge", JSON.stringify({ key: "CUST-011|true", messages: [{ role: "user", text: "x" }] }));
+    act(() => result.current.reset("CUST-007", false)); // a different customer
+    expect(result.current.messages).toHaveLength(0);
+    sessionStorage.clear();
+  });
+});

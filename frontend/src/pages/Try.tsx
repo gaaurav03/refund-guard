@@ -6,7 +6,7 @@ import { DemoSleeping } from "../components/Layout";
 import { ModeSwitch, PersonaPicker } from "../components/PersonaPicker";
 import { LiveFeed, Scoreboard } from "../components/Scoreboard";
 import { useHealth, useMeta, usePoll } from "../lib/hooks";
-import { useConversation } from "../lib/useConversation";
+import { savedSelection, useConversation } from "../lib/useConversation";
 import type { Persona } from "../types/decision";
 
 const ATTACKS = [
@@ -28,8 +28,9 @@ export function Try() {
   const health = useHealth();
   const meta = useMeta();
   const [personas, setPersonas] = useState<Persona[]>([]);
-  const [customer, setCustomer] = useState<string | null>(null);
-  const [gullible, setGullible] = useState(true);
+  const restored = savedSelection("challenge"); // a refresh brings back the same customer, mode and chat
+  const [customer, setCustomer] = useState<string | null>(restored?.customerId ?? null);
+  const [gullible, setGullible] = useState(restored?.gullible ?? true);
   const [tab, setTab] = useState<Tab>("chat");
   const convo = useConversation("challenge");
   const score = usePoll(api.scoreboard, 3000, health === "up");
@@ -115,7 +116,19 @@ export function Try() {
               setTab("decision");
             }}
           />
-          {convo.left !== null && <p className="mt-2 font-mono text-[11px] text-muted">{convo.left} messages left</p>}
+          <div className="mt-2 flex items-center justify-between font-mono text-[11px] text-muted">
+            <span>{convo.left !== null ? `${convo.left} messages left` : ""}</span>
+            {convo.messages.length > 0 && customer && (
+              <button
+                type="button"
+                onClick={() => convo.reset(customer, gullible, true)}
+                disabled={convo.busy}
+                className="hover:text-ink disabled:opacity-50"
+              >
+                ↺ new chat
+              </button>
+            )}
+          </div>
         </section>
 
         <section

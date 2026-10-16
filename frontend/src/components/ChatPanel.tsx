@@ -91,6 +91,9 @@ export function ChatPanel({
           <div className="flex justify-start">
             <div className="rounded-2xl border border-hairline bg-bg px-4 py-2.5 font-mono text-[12px] text-muted">
               <span className="cursor">thinking · checking evidence</span>
+              <span className="mt-1 block text-[11px] text-muted/80">
+                A refund check takes ~30 s: Decider 2B runs on a small free-tier CPU, not a GPU.
+              </span>
             </div>
           </div>
         )}
