@@ -14,6 +14,7 @@ import threading
 import time
 import uuid
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, Literal
@@ -84,6 +85,7 @@ class LiveSession:
     ip_key: str
     created: float = field(default_factory=time.time)
     messages: int = 0
+    busy: bool = False  # one chat turn at a time per session
 
 
 # ---------- request / response models
@@ -112,6 +114,13 @@ class ChatOut(BaseModel):
     reply: str
     decisions: list[dict[str, Any]]
     messages_left: int
+
+
+class ChatJobOut(BaseModel):
+    job_id: str
+    status: Literal["pending", "done", "error"]
+    result: ChatOut | None = None
+    error: str | None = None
 
 
 class ReviewAction(BaseModel):
@@ -163,8 +172,11 @@ def create_app(*, settings: Settings, repo: Repo, agent_factory: AgentFactory,
     known_customers = {c["customer_id"] for c in seed_data.CUSTOMERS}
 
     def client_key(request: Request) -> str:
-        fwd = request.headers.get("x-forwarded-for", "")
-        ip = fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else "unknown")
+        # Behind CloudFront the viewer's address arrives in CloudFront-Viewer-Address ("ip:port"), set by
+        # CloudFront itself. X-Forwarded-For is NOT trusted: a visitor can send their own. The EC2 security
+        # group only admits CloudFront, so the header cannot be forged by calling the instance directly.
+        viewer = request.headers.get("cloudfront-viewer-address", "")
+        ip = viewer.rsplit(":", 1)[0] if viewer else (request.client.host if request.client else "unknown")
         return ip_hash(ip, salt)
 
     def rate_limit(request: Request) -> str:
@@ -237,46 +249,99 @@ def create_app(*, settings: Settings, repo: Repo, agent_factory: AgentFactory,
         return SessionOut(session_id=session.session_id, customer_id=session.customer_id, mode=session.mode,
                           gullible=session.gullible, max_messages=settings.max_messages_per_session)
 
-    @app.post("/api/chat", response_model=ChatOut)
-    def chat(body: ChatIn, request: Request) -> ChatOut:
+    def _admit(body: ChatIn, request: Request) -> LiveSession:
+        """Every check that can refuse a turn up front (rate, session, message cap, budget, one turn at a time)."""
         rate_limit(request)
         with lock:
             live = sessions.get(body.session_id)
-        if live is None:
-            raise HTTPException(404, "Session expired. Please start a new one.")
-        if live.messages >= settings.max_messages_per_session:
-            raise HTTPException(429, "Message limit reached for this session.")
-        if limits.budget_exhausted():
-            raise HTTPException(503, "The demo has used today's budget. Please come back tomorrow.")
+            if live is None:
+                raise HTTPException(404, "Session expired. Please start a new one.")
+            if live.messages >= settings.max_messages_per_session:
+                raise HTTPException(429, "Message limit reached for this session.")
+            if limits.budget_exhausted():
+                raise HTTPException(503, "The demo has used today's budget. Please come back tomorrow.")
+            if live.busy:
+                raise HTTPException(409, "Still answering your previous message.")
+            live.busy = True
+            live.messages += 1
+        return live
 
-        live.messages += 1
-        session = live.session
-        session.add_customer_message(body.message)
-        seen = len(session.decisions)
+    def _turn(live: LiveSession, message: str) -> ChatOut:
         try:
-            result = live.agent(body.message, invocation_state={"session": session})
-            reply = str(result).strip()
-        except Exception:
-            log.exception("agent turn failed")
-            result, reply = None, "Sorry, something went wrong on our side. A person from our team will follow up."
-
-        new = session.decisions[seen:]
-        for d in new:
-            extra: dict[str, Any] = {"snippet": _snippet(body.message)}
-            if d["outcome"] in ("approve", "partial"):
-                order = repo.get_order(d["order_id"]) or {}
-                truth = float(order.get("truth_refundable_amount", 0.0))
-                extra["is_scam_success"] = d["approved_amount"] > truth + 0.01
-            else:
-                extra["is_scam_success"] = False
-            d.update(extra)
+            session = live.session
+            session.add_customer_message(message)
+            seen = len(session.decisions)
             try:
-                repo.update_decision(d["decision_id"], extra)
+                result = live.agent(message, invocation_state={"session": session})
+                reply = str(result).strip()
             except Exception:
-                log.exception("could not annotate decision %s", d["decision_id"])
-        limits.add_spend(_turn_cost_usd(result, len(new)))
-        return ChatOut(reply=reply, decisions=new,
-                       messages_left=settings.max_messages_per_session - live.messages)
+                log.exception("agent turn failed")
+                result, reply = None, "Sorry, something went wrong on our side. A person from our team will follow up."
+
+            new = session.decisions[seen:]
+            for d in new:
+                extra: dict[str, Any] = {"snippet": _snippet(message)}
+                if d["outcome"] in ("approve", "partial"):
+                    order = repo.get_order(d["order_id"]) or {}
+                    truth = float(order.get("truth_refundable_amount", 0.0))
+                    extra["is_scam_success"] = d["approved_amount"] > truth + 0.01
+                else:
+                    extra["is_scam_success"] = False
+                d.update(extra)
+                try:
+                    repo.update_decision(d["decision_id"], extra)
+                except Exception:
+                    log.exception("could not annotate decision %s", d["decision_id"])
+            limits.add_spend(_turn_cost_usd(result, len(new)))
+            return ChatOut(reply=reply, decisions=new,
+                           messages_left=settings.max_messages_per_session - live.messages)
+        finally:
+            live.busy = False
+
+    @app.post("/api/chat", response_model=ChatOut)
+    def chat(body: ChatIn, request: Request) -> ChatOut:
+        """Synchronous turn (CLI, tests). The website uses /api/chat/jobs: a refund check can outlast
+        CloudFront's 60 s origin timeout."""
+        return _turn(_admit(body, request), body.message)
+
+    jobs: dict[str, dict[str, Any]] = {}
+    pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="chat")
+    job_ttl_s = 900.0
+
+    def _run_job(job_id: str, live: LiveSession, message: str) -> None:
+        try:
+            out = _turn(live, message)
+            update: dict[str, Any] = {"status": "done", "result": out}
+        except Exception:
+            log.exception("chat job %s failed", job_id)
+            update = {"status": "error", "error": "Something went wrong on our side. Nothing was refunded."}
+        with lock:
+            if job_id in jobs:
+                jobs[job_id].update(update)
+
+    @app.post("/api/chat/jobs", response_model=ChatJobOut, status_code=202)
+    def start_chat(body: ChatIn, request: Request) -> ChatJobOut:
+        live = _admit(body, request)
+        job_id = "J-" + uuid.uuid4().hex[:16]
+        now = time.time()
+        with lock:
+            for k in [k for k, j in jobs.items() if now - j["created"] > job_ttl_s]:
+                del jobs[k]
+            jobs[job_id] = {"status": "pending", "created": now, "session_id": body.session_id}
+        try:
+            pool.submit(_run_job, job_id, live, body.message)
+        except Exception:
+            live.busy = False
+            raise
+        return ChatJobOut(job_id=job_id, status="pending")
+
+    @app.get("/api/chat/jobs/{job_id}", response_model=ChatJobOut)
+    def chat_job(job_id: str) -> ChatJobOut:
+        with lock:
+            job = dict(jobs.get(job_id) or {})
+        if not job:
+            raise HTTPException(404, "Unknown or expired job. Please start a new chat.")
+        return ChatJobOut(job_id=job_id, status=job["status"], result=job.get("result"), error=job.get("error"))
 
     def _chats() -> list[dict[str, Any]]:
         """Challenge decisions grouped per chat (session): one attempt = one chat, however many tries it took."""

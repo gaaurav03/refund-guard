@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 from types import SimpleNamespace
 from typing import Any
 
@@ -209,3 +210,43 @@ def test_one_chat_is_one_attempt_however_many_tries() -> None:
     assert len(live) == 2
     assert sorted(item["tries"] for item in live) == [1, 3]
     assert "refund ORD-2077" not in client.get("/api/decisions/live").text
+
+
+def _poll(client: TestClient, job_id: str) -> dict[str, Any]:
+    for _ in range(200):
+        body = client.get(f"/api/chat/jobs/{job_id}").json()
+        if body["status"] != "pending":
+            return body
+        time.sleep(0.01)
+    raise AssertionError("job never finished")
+
+
+def test_chat_job_runs_in_background_and_returns_the_same_result() -> None:
+    client, _ = make_client()
+    sid = start(client)
+    r = client.post("/api/chat/jobs", json={"session_id": sid, "message": "please refund ORD-1042 450"})
+    assert r.status_code == 202 and r.json()["status"] == "pending"
+    body = _poll(client, r.json()["job_id"])
+    assert body["status"] == "done"
+    assert body["result"]["decisions"][0]["outcome"] == "approve"
+    assert client.get("/api/scoreboard").json()["attempts"] == 1
+
+
+def test_chat_job_checks_happen_up_front() -> None:
+    client, _ = make_client(max_messages_per_session=1)
+    sid = start(client)
+    assert client.post("/api/chat/jobs", json={"session_id": "nope", "message": "hi"}).status_code == 404
+    _poll(client, client.post("/api/chat/jobs", json={"session_id": sid, "message": "hi"}).json()["job_id"])
+    assert client.post("/api/chat/jobs", json={"session_id": sid, "message": "hi"}).status_code == 429
+    assert client.get("/api/chat/jobs/J-unknown").status_code == 404
+
+
+def test_rate_limit_keys_on_cloudfront_viewer_address_not_x_forwarded_for() -> None:
+    client, _ = make_client(rate_limit_per_min_ip=3)
+    spoofed = [client.post("/api/sessions", json={"customer_id": "CUST-007"},
+                           headers={"x-forwarded-for": f"10.0.0.{i}"}).status_code for i in range(5)]
+    assert 429 in spoofed  # a visitor can't dodge the limit by inventing X-Forwarded-For
+    client2, _ = make_client(rate_limit_per_min_ip=3)
+    viewers = [client2.post("/api/sessions", json={"customer_id": "CUST-007"},
+                            headers={"cloudfront-viewer-address": f"1.2.3.{i}:443"}).status_code for i in range(5)]
+    assert 429 not in viewers  # distinct real viewers are counted separately

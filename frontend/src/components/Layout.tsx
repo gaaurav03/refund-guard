@@ -2,6 +2,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 
 const REPO_URL = "https://github.com/gaaurav03/refund-guard";
+/** Set once the demo video is published (YouTube). Empty = the sleeping page hides the button. */
+const VIDEO_URL = "";
 
 function ThemeToggle() {
   const [theme, setTheme] = useState(() => document.documentElement.getAttribute("data-theme") ?? "light");
@@ -80,12 +82,13 @@ export function DemoSleeping({ reason }: { reason: "asleep" | "budget" }) {
       <p className="mb-8 text-muted">
         {reason === "budget"
           ? "The live agent pauses once it reaches its daily Bedrock spending cap. It's back tomorrow."
-          : "To keep costs low, the live agent (Bedrock + Decider 2B on a GPU) runs 09:00–21:00 IST."}
-        {" "}In the meantime, everything it does is shown in the video and the measured results.
+          : "The live agent (Amazon Bedrock + Decider 2B on a small free-tier AWS machine) is only switched on during demo sessions, to keep it inside a hackathon budget."}
+        {" "}In the meantime, the video shows it working and the landing page has every measured result.
       </p>
-      <div className="flex justify-center gap-3">
+      <div className="flex flex-wrap justify-center gap-3">
+        {VIDEO_URL && <a href={VIDEO_URL} className="btn-primary">Watch the 3-minute video ↗</a>}
         <Link to="/" className="btn-ghost">See how it works</Link>
-        <a href={REPO_URL} className="btn-primary">Read the code ↗</a>
+        <a href={REPO_URL} className="btn-ghost">Read the code ↗</a>
       </div>
     </div>
   );
