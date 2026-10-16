@@ -23,9 +23,9 @@
 - **Themes:** light and dark via CSS variables. The page follows the system setting before first paint, and a toggle saves the choice in localStorage (try/catch).
 - Outcome colours are always paired with an icon and a label (✓ approve, ◐ partial, ✕ deny, ↑ escalate).
 - **Signal readout:** each of the six signals gets a bar, a threshold tick and a value. Values past their threshold turn accent-coloured. The signal that decided is highlighted with ▸. Bars animate 0 → p over 400 ms (disabled under reduced motion). This is the money shot in the video.
-- **Routes:** `/` landing (01 problem · 02 the decision · 03 how it works · 04 measured results · 05 reusable pattern), `/try` challenge, `/chat` store chat, `/review` queue. Sections 2–4 below describe the app screens. The layouts are implemented in `frontend/src/pages/`.
+- **Routes:** `/` landing (01 problem · 02 the decision · 03 how it works · 04 measured results · 05 reusable pattern), `/try` challenge (also the store chat: Normal bot / Gullible bot switch), `/review` queue. `/chat` redirects to `/try` (merged on Oct 16: the two pages duplicated each other). Sections 2–4 below describe the app screens. The layouts are implemented in `frontend/src/pages/`.
 
-## 2. Screen 1 — Customer chat (`/chat`)
+## 2. Screen 1 — Customer chat (now the Normal-bot mode of `/try`)
 
 ```
 ┌──────────────────────────────────────────────┐

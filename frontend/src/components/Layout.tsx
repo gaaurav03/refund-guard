@@ -41,7 +41,6 @@ export function Layout({ children }: { children: ReactNode }) {
           </Link>
           <nav className="flex items-center gap-4 sm:gap-6" aria-label="Main">
             <NavLink to="/try" className={navClass}>Try to scam it</NavLink>
-            <NavLink to="/chat" className={(s) => `${navClass(s)} hidden sm:inline`}>Chat</NavLink>
             <NavLink to="/review" className={(s) => `${navClass(s)} hidden sm:inline`}>Review</NavLink>
             <a href={REPO_URL} className="hidden text-sm text-muted hover:text-ink md:inline">GitHub ↗</a>
             <ThemeToggle />
