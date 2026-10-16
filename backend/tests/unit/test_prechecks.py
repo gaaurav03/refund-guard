@@ -108,3 +108,16 @@ def test_pc10_order_id_differs_from_what_the_customer_typed() -> None:
 ])
 def test_pc10_stays_silent_when_the_call_matches_or_nothing_was_typed(message: str) -> None:
     assert check(state=make_state(recent_customer_messages=[message])) is None
+
+
+
+def test_pc11_story_change_after_proof_of_delivery_goes_to_a_human() -> None:
+    s = make_state(claimed_reason="damaged", earlier_claimed_reason="not_delivered")  # delivered with proof
+    d = check(state=s)
+    assert (d.rule_id, d.outcome) == ("PC-11", "escalate")
+
+
+def test_pc11_does_not_fire_for_other_clarifications() -> None:
+    assert check(state=make_state(claimed_reason="damaged", earlier_claimed_reason="other")) is None
+    no_proof = make_state(claimed_reason="damaged", earlier_claimed_reason="not_delivered", proof_of_delivery=False)
+    assert check(state=no_proof) is None

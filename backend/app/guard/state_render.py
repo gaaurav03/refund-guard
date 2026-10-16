@@ -20,8 +20,22 @@ def _claimed_value(s: RefundClaimState) -> float | None:
                      for i in s.items if i.sku in claimed), 2)
 
 
+REASON_TEXT = {
+    "damaged": "an item arrived damaged", "not_delivered": "the order did not arrive",
+    "wrong_item": "a wrong item arrived", "missing_item": "an item was missing",
+    "not_as_described": "an item was not as described", "changed_mind": "they changed their mind",
+    "other": "another reason",
+}
+
+
 def key_facts(s: RefundClaimState) -> list[str]:
     facts: list[str] = []
+    if s.earlier_claimed_reason and s.earlier_claimed_reason != s.claimed_reason:
+        changed = (f"The customer first said {REASON_TEXT[s.earlier_claimed_reason]}, then changed the claim "
+                   f"during this chat to: {REASON_TEXT[s.claimed_reason]}.")
+        if s.earlier_claimed_reason == "not_delivered" and s.delivery_status == "delivered" and s.proof_of_delivery:
+            changed += " The change came after delivery with proof was confirmed."
+        facts.append(changed)
     if s.claimed_reason == "not_delivered" and s.delivery_status == "delivered":
         proof = "with proof of delivery (photo/signature)" if s.proof_of_delivery else "without proof of delivery"
         facts.append(f"The customer says the order did not arrive, but the delivery record says it was "
@@ -74,6 +88,7 @@ def render_state(s: RefundClaimState) -> dict[str, Any]:
         },
         "CLAIM": {
             "claimed_reason": s.claimed_reason,
+            **({"earlier_claimed_reason": s.earlier_claimed_reason} if s.earlier_claimed_reason else {}),
             "claimed_skus": list(s.claimed_skus),
             **({"claimed_units": dict(s.claimed_units)} if s.claimed_units else {}),
             "requested_amount": s.requested_amount,

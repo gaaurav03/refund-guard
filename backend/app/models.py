@@ -56,6 +56,8 @@ class RefundClaimState(_Strict):
     past_refund_count: int = Field(ge=0)
     past_refund_total: float = Field(ge=0)
     claimed_reason: ClaimedReason
+    # The reason the customer gave earlier in the same chat, if they changed their story. None = no change.
+    earlier_claimed_reason: ClaimedReason | None = None
     claimed_skus: list[str] = Field(default_factory=list)
     # SKU -> how many units have the problem ("one of the two packs" -> 1). Empty = the whole line.
     claimed_units: dict[str, int] = Field(default_factory=dict)

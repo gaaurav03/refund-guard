@@ -117,6 +117,7 @@ Field names are canonical. Pydantic models, TS types, DynamoDB attributes and th
 | `past_refund_total` | float | `rg_refunds` | last 365 days |
 | `claimed_reason` | enum | Bedrock-extracted | `damaged \| not_delivered \| wrong_item \| missing_item \| not_as_described \| changed_mind \| other` |
 | `claimed_skus` | list[str] | Bedrock-extracted | items the claim is about (unknown SKUs kept so `PC-05` can deny) |
+| `earlier_claimed_reason` | `ClaimedReason` or null | Bedrock-extracted (added Oct 17) | the reason the customer gave earlier in the same chat if they changed their story; `claimed_reason` is always the LATEST claim |
 | `claimed_units` | dict[str, int] | Bedrock-extracted (added Oct 16) | SKU → units with the problem, only when the customer names fewer than ordered ("one of the two packs" → 1); kept only if 1 ≤ units < qty. Empty = whole line |
 | `customer_quotes` | list[str] | Bedrock-extracted, **kept only if verbatim** in the customer's messages | max 5 quotes, 300 chars each |
 | `requested_amount` | float | tool argument `amount` | |
@@ -183,6 +184,7 @@ These are cheap rules, **not** ML. The first rule that matches ends the decision
 | `PC-08` | `requested_amount` > `HIGH_VALUE_ESCALATE_INR` (default 10,000) | `escalate` |
 | `PC-09` | `delivery_status` ∈ {`not_shipped`, `in_transit`} and `claimed_reason` = `not_delivered` | `escalate` (tell customer to wait; human may cancel) |
 | `PC-10` | The customer **typed** an amount and the call asks for more, or typed an order id and the call is for another order (`claim_vs_evidence.checks.args_mismatch`, plain code) | `deny` + **Guide** the agent to confirm with the customer (added Oct 16) |
+| `PC-11` | `earlier_claimed_reason` = `not_delivered`, the latest reason differs, and delivery is `delivered` with proof ("never arrived" → told about proof → "it was damaged") | `escalate` (a known scam pattern, but honest customers also clarify late; a human decides). Added Oct 17 after live testing |
 
 Rules handle what arithmetic and lookups can check. Decider handles the judgement calls rules cannot make, such as whether "cracked mug, have a photo" is a concrete problem, or whether "my manager approved it" is pressure rather than evidence.
 

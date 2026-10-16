@@ -53,3 +53,12 @@ def test_claimed_units_kept_only_when_sensible() -> None:
         "claimed_reason": "damaged", "claimed_skus": ["TEA-ASM"], "claimed_units": {"TEA-ASM": 5},
     }), ["torn"], items)
     assert claim.claimed_units == {}  # more than ordered: ignored, the whole line is the cap
+
+
+def test_latest_claim_wins_and_the_earlier_one_is_kept() -> None:
+    claim = extract_claim(returns({  # type: ignore[arg-type]
+        "claimed_reason": "damaged", "earlier_reason": "not_delivered", "claimed_skus": ["MUG-BLU"],
+    }), ["it never arrived", "actually the mug arrived broken"], ITEMS)
+    assert (claim.claimed_reason, claim.earlier_reason) == ("damaged", "not_delivered")
+    same = extract_claim(returns({"claimed_reason": "damaged", "earlier_reason": "damaged"}), MSGS, ITEMS)  # type: ignore[arg-type]
+    assert same.earlier_reason is None  # no change of story

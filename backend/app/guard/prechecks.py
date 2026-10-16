@@ -1,4 +1,4 @@
-"""Deterministic pre-checks PC-01..PC-10 (docs/decision.md section 4).
+"""Deterministic pre-checks PC-01..PC-11 (docs/decision.md section 4).
 
 Cheap rules that run before Decider. The first match wins and ends the decision.
 """
@@ -66,6 +66,17 @@ def run_prechecks(
             "PC-09",
             "escalate",
             "Sent to human review: the order is still on its way. Tell the customer the current status.",
+        )
+
+    # PC-11: "never arrived" -> told it was delivered with proof -> a different reason. A known scam
+    # pattern, but also how honest customers sometimes explain: neither pay nor refuse, a human checks.
+    if (state.earlier_claimed_reason == "not_delivered" and state.claimed_reason != "not_delivered"
+            and state.delivery_status == "delivered" and state.proof_of_delivery):
+        return _hit(
+            "PC-11",
+            "escalate",
+            "NOT PAID. Sent to human review because the claim changed during the chat. Tell the customer a "
+            "person will check it. Do not promise a refund or an amount. Do not retry.",
         )
 
     # PC-10: the customer typed an amount or order id and this call does not match it (plain code;
