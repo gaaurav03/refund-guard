@@ -115,3 +115,19 @@
 - [ ] No secrets in repo (gitleaks clean)
 - [ ] Budget alarms on; EC2 stopped or intentionally running
 - [ ] Submission form completed before Oct 23 11:59 PM PT
+
+## Builder Center submission form (confirmed 2026-10-17)
+"Your project" → Edit project. These are ALL the fields:
+
+| Field | Value |
+|---|---|
+| Title (≤255) | from `docs/article.md` |
+| Description (≤512) | from `docs/article.md` |
+| Body (Markdown toggle) | **the article** (`docs/article.md`), including the **video link** (there is no separate video field) |
+| Cover image (optional, 1200×675, ≤2 MB, no text) | `docs/assets/cover.png` |
+| Tags (pick from list, max 5) | must include `strands-decider-2b` and `guardrails` |
+| GitHub or GitLab repository | https://github.com/gaaurav03/refund-guard (make public first) |
+| Endpoint or live demo | https://dl0e9zh1uq30l.cloudfront.net |
+| Jupyter or SageMaker notebook | leave empty |
+
+Buttons: Preview, Publish. Drafts auto-save.
