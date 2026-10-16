@@ -33,7 +33,7 @@ Held-out test split: **34 cases**, labels committed before any run. Every arm ge
 
 | Model | Accuracy | Scams paid (of 20) | Genuine denied (of 8) | Escalated | Same answer every run | USD per 1k decisions |
 |---|---|---|---|---|---|---|
-| **Decider 2B** | 94% | **0** | 0 | 18% | yes (0 flips) | on GPU: measured at deploy |
+| **Decider 2B** | 94% | **0** | 0 | 18% | yes (0 flips) | 0.89 (EC2 CPU, ~27 s each) |
 | Nova 2 Lite | 97% | 0 | 1 | 18% | 1 flip | 0.45 |
 | DeepSeek V3.2 | 91% | 0 | 1 | 18% | yes | 0.65 |
 | Kimi K3 (1 run) | 97% | 0 | 1 | 18% | n/a | 15.46 |
@@ -52,9 +52,9 @@ Held-out test split: **34 cases**, labels committed before any run. Every arm ge
 
 **What this shows**
 - **The pattern is what keeps money safe.** With six narrow questions plus code deciding, *every* model paid 0 of 20 scams. Asking an LLM "should I refund?" directly paid scams for 3 of 5 models, including the agent's own model.
-- **Decider 2B matches big LLMs on accuracy (94% vs 91–97%) but doesn't beat them.** Its case rests on bounded outputs, determinism, and speed and cost on a GPU, which are measured at deploy.
+- **Decider 2B matches big LLMs on accuracy (94% vs 91–97%) but doesn't beat them.** Its case rests on bounded outputs and determinism. On our Free-plan CPU machine it is **slower** (~27 s vs 1–4 s) and about the same cost, so we do not claim a speed or cost win.
 - **Honest misses:** `args_grounded` scored as an "is this a scam?" signal, not a literal argument check (68% vs its label; gpt-oss 92%, Kimi 94%). Most models misread it on attacks, so the wording is our fix to make. Decider also missed both "chatbot inflated the amount" cases, but the code cap paid only the item's value.
-- Decider latency today: **14.6 s on a laptop CPU** (slower than every LLM). GPU numbers are measured at deploy.
+- Decider latency: **~27 s per decision on EC2 `m7i-flex.large`** (Free plan; GPUs are blocked), 14.6 s on a laptop CPU. LLM judges, measured one call at a time: Nova Pro 0.97 s, Nova 2 Lite 1.07 s, gpt-oss 2.1 s, DeepSeek 4.3 s, Kimi K3 21.8 s (median).
 
 ## Reusable pattern
 

@@ -13,7 +13,7 @@ flowchart LR
   end
   subgraph AWS["AWS ap-southeast-2 (Sydney)"]
     CF[CloudFront + S3<br/>static frontend]
-    subgraph EC2["EC2 g4dn.xlarge (T4 GPU, 16 GiB RAM)"]
+    subgraph EC2["EC2 m7i-flex.large (CPU, 2 vCPU, 8 GiB, free-eligible)"]
       API[FastAPI backend<br/>:8080]
       AG[Strands Agent<br/>tools: lookup_order, get_delivery, issue_refund]
       RG[RefundGuard<br/>InterventionHandler]
@@ -128,7 +128,7 @@ sequenceDiagram
 | Resource | Choice | Notes |
 |---|---|---|
 | Region | **`ap-southeast-2` (Sydney)** | **Forced:** the account sits in an AWS Organization whose SCP allows EC2, DynamoDB, Lambda etc. only in ap-southeast-2 (verified 2026-10-15). Bedrock is reached via `apac.`/`au.`/`global.` inference profiles |
-| Compute | EC2 **`g4dn.xlarge`** (1× NVIDIA T4 16 GB, 4 vCPU, 16 GiB), Deep Learning AMI with CUDA | CPU measured too slow (6–19 s per decision, memory.md TV-09). Needs a G-instance vCPU quota increase + free-plan check (**TV-21**) and price (**TV-10**). Fallbacks, in order: spot `g4dn.xlarge`, `g6.xlarge`, CPU `c7i.2xlarge` with an honest "slow mode" |
+| Compute | EC2 **`m7i-flex.large`** (2 vCPU, 8 GiB, CPU only, Ubuntu 24.04, 30 GB gp3), **$0.12/h from credits** | **Decided 2026-10-16: Free plan only.** The account's Free plan blocks every non-free-tier type (GPU launch refused: "not eligible for Free Tier"), and the owner will not upgrade. Measured: Decider uses 4.3 GB RAM, one-time ~260 s warm-up, then **~26.7 s per decision**. The demo shows a "slow mode" notice; the article reports the speed comparison as a loss |
 | Disk | 40 GiB gp3 | Model weights + venv |
 | Processes | `systemd`: `decider.service` (:8099, localhost only), `api.service` (uvicorn :8080) behind Caddy/nginx with TLS | Decider never exposed publicly |
 | Frontend | S3 + CloudFront (OAC) | **TODO-VERIFY (TV-19)** free-plan availability; fallback = FastAPI static |
@@ -162,7 +162,7 @@ sequenceDiagram
 | Claim extraction (Bedrock) | ≤ 1,500 ms | could later be merged into the tool-call turn |
 | Evidence reads (4 DynamoDB gets, parallel) | ≤ 60 ms | |
 | Pre-checks | ≤ 5 ms | |
-| **Decider `/v1/systemone`** | **target ≤ 500 ms p95 on T4 GPU** | GPU reference: 115 ms p50 / 299 ms p95 per question on RTX 3090 (a T4 is slower; measure, TV-09). CPU measured: ~20 ms per input token → 6–19 s, so not viable. Keep the state ≤ 600 tokens |
+| **Decider `/v1/systemone`** | **~27 s per decision (measured, m7i-flex.large CPU)** | No GPU on the Free plan. Laptop CPU (12 cores) ~15 s. Published GPU reference: 115 ms p50 per question on RTX 3090 (not reproducible on this account). The UI shows progress while the guard checks |
 | Policy + ledger + log write | ≤ 40 ms | |
 | Bedrock reply | 1,000–2,500 ms | |
 | **Decision latency (benchmarked)** | pre-checks + Decider + policy | compared against the LLM-as-judge call |

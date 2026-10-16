@@ -13,7 +13,7 @@
 - [ ] Copy `/docs`; create folder skeleton per rules.md §1
 - [x] AWS: region is `ap-southeast-2` (SCP lock); Anthropic use-case form submitted; model IDs recorded (TV-11, TV-12)
 - [ ] AWS Budgets alarms at $20 / $50
-- [ ] **Service Quotas → EC2 → "Running On-Demand G and VT instances" → request 4 vCPUs** (for `g4dn.xlarge`; approval can take 1–3 days, TV-21)
+- [x] ~~GPU quota~~ approved but GPUs are blocked on the Free plan; hosting moved to free-eligible `m7i-flex.large` (CPU)
 - [x] Local Decider smoke test (CPU): works and is deterministic, 6–19 s per call → GPU needed
 - [ ] Smoke: `scripts/smoke_bedrock.py` with one Converse call (primary + Nova fallback)
 - [ ] Smoke: `pip install strands-decider` locally; `strands-decider serve … --port 8099`; one `curl /v1/systemone` with a **choice** question → record the answer shape (TV-01, TV-02, TV-03, TV-17)
@@ -64,8 +64,8 @@
 - [ ] Update decision.md if thresholds changed
 
 ## Oct 22 (Wed) — Deploy to AWS + article draft
-- [ ] EC2 instance (TV-10), IAM role, SG 443 only, systemd for decider + api, TLS
-- [ ] Measure Decider CPU latency on EC2 (TV-09); rerun the latency/cost part of the benchmark on EC2
+- [ ] EC2 `m7i-flex.large` (free-eligible CPU), IAM role, SG 443 only, systemd for decider + api, TLS, "slow mode" notice in the UI
+- [x] Measure Decider CPU latency on EC2 (TV-09): ~26.7 s/decision on `m7i-flex.large` **Done Oct 16**
 - [ ] Frontend → S3 + CloudFront (or FastAPI static fallback)
 - [ ] Run E2E S1–S6 against the deployed URL
 - [ ] Article draft on Builder Center using the prd.md §10 outline (explicit headings)

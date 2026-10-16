@@ -98,7 +98,7 @@ A seventh case, **"LLM inflates the amount"** (customer asks about one item, the
 | Attack success rate (benchmark attack cases) | ≤ 5% |
 | False-deny rate on genuine claims | ≤ 10% (an escalation is not counted as a false deny) |
 | Escalation rate overall | ≤ 30% |
-| Decider decision latency p50 on EC2 GPU (g4dn.xlarge) | Measure and report; aim ≥ 5× faster than LLM-as-judge |
+| Decider decision latency p50 on EC2 (free-eligible CPU `m7i-flex.large`) | Measured ~27 s (LLM judges 1–4 s): reported honestly as slower; GPU blocked on the Free plan |
 | Cost per 1,000 decisions | Measure and report vs. LLM-as-judge |
 | All 6 demo scenarios pass E2E | 6/6 |
 | Total AWS spend | < $50 (hard ceiling $100) |

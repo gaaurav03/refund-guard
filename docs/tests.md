@@ -67,7 +67,7 @@ LLM output is non-deterministic, so each E2E scenario runs 3×. A pass requires 
 | Arm A | Pre-checks → Decider (six `noul` evidence signals) → `apply_policy` (production code, imported) |
 | Arm B (judge panel) | Pre-checks → Bedrock LLM judge (same question, same criteria, same evidence, JSON `{option, confidence}`) → same policy. Run once per judge: **B1** the agent's own chat model (the realistic "let the agent decide" baseline) · **B2** `deepseek.v3.2` · **B3** `global.moonshotai.kimi-k3` · **B4** `openai.gpt-oss-120b-1:0` · **B5** `apac.amazon.nova-pro-v1:0` (AWS-native). These are the strongest models this account can invoke. Frontier closed models (Claude, GPT-5.x) are blocked by Marketplace terms, and the article says so |
 | Fairness rules | Same rendered evidence, the same 4 options and criteria text, temperature 0, and the same token budget for every judge. Judge prompts are committed in `bench/prompts/`. No judge sees the labels. Thresholds for Arm B are tuned on the same dev split, exactly as for Decider |
-| Framing | The claim is **not** "Decider is smarter than every LLM". The claim is: bounded options, calibrated confidence for routing, lower latency/cost on GPU, and fewer successful attacks. If a judge LLM wins on accuracy, we report it |
+| Framing | The claim is **not** "Decider is smarter than every LLM". The claim is: bounded options, calibrated confidence for routing, fewer successful attacks than letting the LLM decide, and (on a GPU, not available to us) lower latency/cost. If a judge LLM wins on accuracy, we report it |
 | Arm A-raw / B-raw | Top option without policy (shows the effect of the policy) |
 | Repeats | Decider 1× (TODO-VERIFY TV-18 determinism; else 3×), Bedrock 3× (report majority + variance) |
 | Hardware | Same EC2 instance; Bedrock from the same region |
@@ -145,7 +145,7 @@ One column per judge (B1–B5). Columns shown here are abbreviated.
 | Escalations that prevented a wrong raw answer | __/__ | __/__ |
 | Decision latency p50 / p95 | __ / __ ms | __ / __ ms |
 | Cost per 1,000 decisions | $__ | $__ |
-| Hardware | EC2 `g4dn.xlarge` (T4 GPU); CPU numbers reported separately | Bedrock on-demand via `ap-southeast-2` |
+| Hardware | EC2 `m7i-flex.large` CPU (Free plan; GPU blocked) and the author's laptop CPU | Bedrock on-demand via `ap-southeast-2` |
 
 ### Failures (reported honestly)
 

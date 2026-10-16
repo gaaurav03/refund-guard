@@ -1,0 +1,48 @@
+{
+ "measured_at": "2026-10-16T10:37:41.183707+00:00",
+ "region": "ap-southeast-2",
+ "warmup": 5,
+ "n": 34,
+ "judges": {
+  "B1": {
+   "model": "global.amazon.nova-2-lite-v1:0",
+   "p50_ms": 1067.3,
+   "p95_ms": 2318.8,
+   "mean_ms": 1227.8,
+   "calls": 30,
+   "errors": 4
+  },
+  "B2": {
+   "model": "deepseek.v3.2",
+   "p50_ms": 4321.2,
+   "p95_ms": 27969.6,
+   "mean_ms": 35012.7,
+   "calls": 34,
+   "errors": 0
+  },
+  "B3": {
+   "model": "global.moonshotai.kimi-k3",
+   "p50_ms": 21764.7,
+   "p95_ms": 135066.6,
+   "mean_ms": 31178.6,
+   "calls": 32,
+   "errors": 2
+  },
+  "B4": {
+   "model": "openai.gpt-oss-120b-1:0",
+   "p50_ms": 2069.1,
+   "p95_ms": 2761.3,
+   "mean_ms": 2086.0,
+   "calls": 34,
+   "errors": 0
+  },
+  "B5": {
+   "model": "apac.amazon.nova-pro-v1:0",
+   "p50_ms": 968.5,
+   "p95_ms": 1059.0,
+   "mean_ms": 972.1,
+   "calls": 34,
+   "errors": 0
+  }
+ }
+}

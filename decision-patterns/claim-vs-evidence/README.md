@@ -124,7 +124,7 @@ policy, Nova 2 Lite, DeepSeek V3.2, Kimi K3, gpt-oss-120b and Nova Pro all paid 
 Asked to decide approve/deny directly, 3 of 5 models paid at least one scam (up to ₹3,650). The questions and the
 code policy carry the safety; Decider 2B makes it cheap and deterministic. See [`bench/results/RESULTS.md`](../../bench/results/RESULTS.md).
 
-Latency: ~14 s per decision on a laptop CPU (six questions); GPU numbers are measured on deploy.
+Latency (six questions, ~1,050 input tokens): ~27 s per decision on an EC2 `m7i-flex.large` CPU, ~15 s on a 12-core laptop. A GPU should be far faster (published: ~115 ms per question on an RTX 3090), but we could not measure one.
 
 ## Known limitations
 

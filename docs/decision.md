@@ -303,7 +303,7 @@ KEY FACTS that put the claim and the record side by side.
 | ADR-05 | Deterministic pre-checks before Decider | Cheaper, exact, explainable; saves Decider calls |
 | ADR-06 | Amount is computed by code (`partial_cap`), never by a model | Bounded blast radius |
 | ADR-07 | ~~`manipulation` question~~ **replaced by `non_evidence`** in ADR-15 | The narrower wording plus "deny unless a concrete problem exists" works better |
-| ADR-08 | Self-host Decider on a GPU EC2 instance (`g4dn.xlarge`) | CPU measured at 6–19 s per decision |
+| ADR-08 | ~~GPU EC2 (`g4dn.xlarge`)~~ **Self-host Decider on a free-eligible CPU EC2 (`m7i-flex.large`)** (revised 2026-10-16) | The Free plan blocks GPU types and the owner will not upgrade. ~27 s per decision, $0.12/h from credits; speed reported honestly |
 | ADR-09 | Fail closed to `escalate` on any error | Safe default; humans review in the queue |
 | ADR-10 | Port `8099` via `STRANDS_DECIDER_URL` | Matches the upstream example client |
 | ADR-11 | Checkpoint `StrandsAgents/strands-decider-2B-qwen3.5-v1-2610` | Current README model; `hobson-v21` and `E4B` kept as comparisons |
