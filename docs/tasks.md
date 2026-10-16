@@ -9,7 +9,7 @@
 
 ## Oct 15 (Wed) — Setup and smoke tests
 - [ ] Confirm builder.aws.com profile exists and register for the hackathon; check the submission form fields (TV-15)
-- [ ] Create GitHub repo `refund-guard` (**private** until Oct 23), Apache-2.0 `LICENSE`, `.gitignore`, `.env.example`
+- [x] Create GitHub repo `refund-guard` (**private** until Oct 23), Apache-2.0 `LICENSE`, `.gitignore`, `.env.example`
 - [ ] Copy `/docs`; create folder skeleton per rules.md §1
 - [x] AWS: region is `ap-southeast-2` (SCP lock); Anthropic use-case form submitted; model IDs recorded (TV-11, TV-12)
 - [ ] AWS Budgets alarms at $20 / $50
@@ -22,15 +22,15 @@
 - [ ] Update memory.md: resolved TODO-VERIFYs, progress log
 
 ## Oct 16 (Thu) — Hackathon opens · Agent + data
-- [ ] `models.py`: `RefundClaimState`, `OrderItem`, `DeciderResult`, `Decision`
+- [x] `models.py`: `RefundClaimState`, `OrderItem`, `DeciderResult`, `Decision`
 - [ ] `scripts/create_tables.py` (`rg_*`, on-demand) + `scripts/seed_dynamodb.py` (personas for S1–S6 + ~15 extra)
 - [ ] Agent tools `lookup_order`, `get_delivery`, `issue_refund` (simulated, ledger check stubbed to deny)
 - [ ] FastAPI `/api/sessions`, `/api/chat`; session-bound `customer_id`
-- [ ] Unit tests: schema
+- [x] Unit tests: schema
 
 ## Oct 17 (Fri) — Pre-checks + claim extraction
 - [ ] **Model bake-off** (`scripts/bakeoff_models.py`): `openai.gpt-oss-120b-1:0` vs `deepseek.v3.2` vs `global.amazon.nova-2-lite-v1:0` through Strands `BedrockModel` on S1–S6 transcripts. Score correct tool calls, valid extraction JSON, reply quality and latency. Pick the agent model + fallback and record the choice in memory.md
-- [ ] `prechecks.py` `PC-01..PC-09` + unit tests
+- [x] `prechecks.py` `PC-01..PC-09` + unit tests (pulled forward to Oct 16)
 - [ ] Bedrock claim extraction → `RefundClaimState` (+ IT-08)
 - [ ] `state_render.py` (deterministic, quotes last) + tests
 - [ ] Start `bench/cases.jsonl`: 20 cases + `LABELING.md`
@@ -43,7 +43,7 @@
 - [ ] **Milestone:** S1, S2 and S4 work from the terminal/curl
 
 ## Oct 19 (Sun) — Confidence policy + review queue
-- [ ] `policy.py` (thresholds, manipulation downgrade, `partial_cap`) + unit tests
+- [x] `policy.py` (thresholds, manipulation downgrade, `partial_cap`) + unit tests (pulled forward to Oct 16)
 - [ ] `rg_decisions` logging, `rg_review_queue`, `/api/review` endpoints + reviewer token
 - [ ] Bedrock reply-writing per outcome; fallback model switch (IT-05)
 - [ ] E2E tests S1–S6 pass locally
