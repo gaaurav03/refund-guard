@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { Annotation, DotNav, Terminal } from "../components/Decor";
 import { HeroDemo } from "../components/HeroDemo";
-import { SectionLabel } from "../components/Layout";
+import { SectionLabel, VIDEO_URL } from "../components/Layout";
 import { OutcomeChip } from "../components/OutcomeChip";
 import { WallOfAttempts } from "../components/WallOfAttempts";
 import { useHealth, usePoll } from "../lib/hooks";
@@ -95,6 +95,7 @@ export function Landing() {
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link to="/try" className="btn-primary">Try to scam it →</Link>
+            <a href={VIDEO_URL} className="btn-ghost">Watch the video ↗</a>
             <a href="#how" className="btn-ghost">How it works</a>
           </div>
           <div className="mt-8 hidden lg:block">

@@ -3,7 +3,7 @@ import { Link, NavLink } from "react-router-dom";
 
 const REPO_URL = "https://github.com/gaaurav03/refund-guard";
 /** Set once the demo video is published (YouTube). Empty = the sleeping page hides the button. */
-const VIDEO_URL = "";
+export const VIDEO_URL = "https://youtu.be/l-mvH-7ydu0";
 
 function ThemeToggle() {
   const [theme, setTheme] = useState(() => document.documentElement.getAttribute("data-theme") ?? "light");
@@ -44,6 +44,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <nav className="flex items-center gap-4 sm:gap-6" aria-label="Main">
             <NavLink to="/try" className={navClass}>Try to scam it</NavLink>
             <NavLink to="/review" className={(s) => `${navClass(s)} hidden sm:inline`}>Review</NavLink>
+            <a href={VIDEO_URL} className="text-sm text-muted hover:text-ink">Video ↗</a>
             <a href={REPO_URL} className="hidden text-sm text-muted hover:text-ink md:inline">GitHub ↗</a>
             <ThemeToggle />
           </nav>

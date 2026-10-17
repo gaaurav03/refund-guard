@@ -4,7 +4,13 @@
 
 An AI customer-support agent for a small online store. It runs on Amazon Bedrock, and every `issue_refund` call is checked by **Strands Decider 2B** before any money moves.
 
-🚧 Work in progress for the AWS Strands Decider Agent Hackathon (Oct 2026).
+| | |
+|---|---|
+| 🎥 **Demo video (under 3 min)** | https://youtu.be/l-mvH-7ydu0 |
+| 🌐 **Live demo** | https://dl0e9zh1uq30l.cloudfront.net (the live agent runs during demo sessions; otherwise the page shows "demo sleeping" and the video) |
+| 🧩 **Reusable pattern** | [`decision-patterns/claim-vs-evidence/`](decision-patterns/claim-vs-evidence/) |
+
+Built for the AWS Strands Decider Agent Hackathon (Oct 2026).
 
 ## The decision
 

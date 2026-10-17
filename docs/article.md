@@ -40,7 +40,7 @@ https://dl0e9zh1uq30l.cloudfront.net
 
 > **Declared decision pattern: Guardrails** · #strands-decider-2b #guardrails
 >
-> 🎥 **Demo video (under 3 minutes):** VIDEO_URL_HERE
+> 🎥 **Demo video (under 3 minutes):** https://youtu.be/l-mvH-7ydu0
 > 🧪 **Live demo, try to scam it:** https://dl0e9zh1uq30l.cloudfront.net/try
 > 📦 **Code + reusable pattern (Apache-2.0):** https://github.com/gaaurav03/refund-guard
 
